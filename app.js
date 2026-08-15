@@ -23,11 +23,18 @@ const INITIAL_LEAVES = [
     { id: 'l4', matricule: '105', name: 'Amine Khelifi', type: 'Congé Annuel', start: '2026-06-15', end: '2026-06-30', days: 15, status: 'Terminé' }
 ];
 
+const INITIAL_DAILY_LOGS = [
+    { id: 'd1', matricule: '103', name: 'Mohamed Saidi', date: '2026-08-14', type: 'Retard', minutes: 25, reason: 'Embouteillages autoroute' },
+    { id: 'd2', matricule: '105', name: 'Amine Khelifi', date: '2026-08-12', type: 'Retard', minutes: 40, reason: 'Panne de véhicule' },
+    { id: 'd3', matricule: '107', name: 'Khaled Dahmani', date: '2026-08-10', type: 'Absence Injustifiée', minutes: 480, reason: 'Non justifié' }
+];
+
 // App State Management
 class RHManagerApp {
     constructor() {
         this.employees = JSON.parse(localStorage.getItem('rh_employees')) || INITIAL_EMPLOYEES;
         this.leaves = JSON.parse(localStorage.getItem('rh_leaves')) || INITIAL_LEAVES;
+        this.dailyLogs = JSON.parse(localStorage.getItem('rh_daily_logs')) || INITIAL_DAILY_LOGS;
         this.charts = {};
         
         this.initDOM();
@@ -38,6 +45,7 @@ class RHManagerApp {
     saveState() {
         localStorage.setItem('rh_employees', JSON.stringify(this.employees));
         localStorage.setItem('rh_leaves', JSON.stringify(this.leaves));
+        localStorage.setItem('rh_daily_logs', JSON.stringify(this.dailyLogs));
     }
 
     initDOM() {
@@ -59,6 +67,8 @@ class RHManagerApp {
         this.tableEmp = document.getElementById('table-employees').querySelector('tbody');
         this.tableDashLeaves = document.getElementById('table-dashboard-leaves').querySelector('tbody');
         this.tableLeavesHist = document.getElementById('table-leaves-history').querySelector('tbody');
+        this.tableDailyLog = document.getElementById('table-daily-log') ? document.getElementById('table-daily-log').querySelector('tbody') : null;
+        this.tableMonthlySummary = document.getElementById('table-monthly-summary') ? document.getElementById('table-monthly-summary').querySelector('tbody') : null;
         this.tablePayroll = document.getElementById('table-payroll-summary').querySelector('tbody');
     }
 
@@ -69,6 +79,19 @@ class RHManagerApp {
                 e.preventDefault();
                 const tabId = link.getAttribute('data-tab');
                 this.switchTab(tabId);
+            });
+        });
+
+        // Subtabs switching (Leaves & Finance)
+        document.querySelectorAll('.subtab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const subtabId = btn.getAttribute('data-subtab');
+                const parentPanel = btn.closest('.tab-panel');
+                parentPanel.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+                parentPanel.querySelectorAll('.subtab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                const targetContent = document.getElementById(`subtab-${subtabId}`);
+                if (targetContent) targetContent.classList.add('active');
             });
         });
 
@@ -99,6 +122,15 @@ class RHManagerApp {
             this.handleSaveLeave();
         });
 
+        // Daily Attendance Form Submit
+        const dailyForm = document.getElementById('daily-attendance-form');
+        if (dailyForm) {
+            dailyForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSaveDailyLog();
+            });
+        }
+
         // Leave duration date auto-calculator
         document.getElementById('leave-start-date').addEventListener('change', () => this.calcLeaveEnd());
         document.getElementById('leave-days').addEventListener('input', () => this.calcLeaveEnd());
@@ -109,6 +141,22 @@ class RHManagerApp {
         document.getElementById('pay-trans').addEventListener('input', () => this.calcPayrollNet());
         document.getElementById('pay-panier').addEventListener('input', () => this.calcPayrollNet());
         document.getElementById('generate-payslip-btn').addEventListener('click', () => this.generatePayslipModal());
+
+        // Official Document Generator
+        const genDocBtn = document.getElementById('generate-doc-btn');
+        if (genDocBtn) {
+            genDocBtn.addEventListener('click', () => this.generateOfficialDocumentModal());
+        }
+
+        // CSV / Excel Export Buttons
+        const expEmpExcel = document.getElementById('export-emp-excel');
+        if (expEmpExcel) expEmpExcel.addEventListener('click', () => this.exportToCSV(this.employees, 'employes_rh_manager.csv'));
+
+        const expLeavesCsv = document.getElementById('export-leaves-csv');
+        if (expLeavesCsv) expLeavesCsv.addEventListener('click', () => this.exportToCSV(this.leaves, 'conges_rh_manager.csv'));
+
+        const expBilanBtn = document.getElementById('export-bilan-btn');
+        if (expBilanBtn) expBilanBtn.addEventListener('click', () => this.exportBilanCSV());
 
         // Filter buttons in Employee Directory
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -135,11 +183,29 @@ class RHManagerApp {
                 localStorage.clear();
                 this.employees = INITIAL_EMPLOYEES;
                 this.leaves = INITIAL_LEAVES;
+                this.dailyLogs = INITIAL_DAILY_LOGS;
                 this.saveState();
                 this.renderAll();
                 this.showToast('Données réinitialisées.', 'info');
             }
         });
+
+        // Mobile hamburger menu toggle
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        if (mobileBtn && sidebar) {
+            mobileBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            // Close sidebar when clicking a nav link on mobile
+            this.navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('open');
+                    }
+                });
+            });
+        }
     }
 
     switchTab(tabId) {
@@ -160,6 +226,7 @@ class RHManagerApp {
                 'leaves': 'Gestion des Congés & Absences',
                 'analytics': 'Statistiques & Bilan RH',
                 'finance': 'Finance & Fiches de Paye (Algérie)',
+                'documents': 'Générateur de Documents RH Officiels',
                 'whatsapp': 'Centre de Notifications WhatsApp',
                 'outlook': 'Intégration Microsoft Outlook'
             };
@@ -177,6 +244,8 @@ class RHManagerApp {
         this.renderEmployeesTable('all');
         this.renderDashboardTables();
         this.renderLeavesTable();
+        this.renderDailyLogsTable();
+        this.renderMonthlySummaryTable();
         this.populateDropdowns();
         this.renderPayrollTable();
         this.renderCharts();
@@ -245,7 +314,7 @@ class RHManagerApp {
                 <td><strong>${e.matricule}</strong></td>
                 <td>${e.name}</td>
                 <td><span style="color:#e67e22; font-weight:600;">CDD (${e.duration})</span></td>
-                <td><button class="btn-secondary btn-sm" onclick="app.switchTab('employees')">Renouveler</button></td>
+                <td><button class="btn-secondary btn-sm" onclick="app.openEmployeeModal('${e.id}')">Renouveler</button></td>
             </tr>
         `).join('');
     }
@@ -264,11 +333,65 @@ class RHManagerApp {
         `).join('');
     }
 
+    renderDailyLogsTable() {
+        if (!this.tableDailyLog) return;
+        this.tableDailyLog.innerHTML = this.dailyLogs.map(d => `
+            <tr>
+                <td>${d.date}</td>
+                <td><strong>${d.name}</strong> (${d.matricule})</td>
+                <td><span class="status-badge ${d.type === 'Retard' ? 'conge' : 'maladie'}">${d.type}</span></td>
+                <td><strong>${d.minutes} min</strong></td>
+                <td>${d.reason || '-'}</td>
+                <td><button class="btn-icon delete" onclick="app.deleteDailyLog('${d.id}')"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    renderMonthlySummaryTable() {
+        if (!this.tableMonthlySummary) return;
+        this.tableMonthlySummary.innerHTML = this.employees.map(emp => {
+            const empLogs = this.dailyLogs.filter(d => d.matricule === emp.matricule);
+            const totalMins = empLogs.reduce((sum, d) => sum + (d.minutes || 0), 0);
+            const retardsCount = empLogs.filter(d => d.type === 'Retard').length;
+            const injustCount = empLogs.filter(d => d.type === 'Absence Injustifiée').length;
+            
+            // Hourly rate calculation approx: base / 173.33h
+            const baseSalary = emp.salary || 75000;
+            const hourlyRate = baseSalary / 173.33;
+            const minsCost = (totalMins / 60) * hourlyRate;
+            const injustCost = injustCount * (hourlyRate * 8);
+            const totalDeduction = Math.round(minsCost + injustCost);
+
+            return `
+                <tr>
+                    <td><strong>${emp.matricule}</strong></td>
+                    <td>${emp.name}</td>
+                    <td><strong style="color:${totalMins > 30 ? '#ef4444' : '#1e293b'};">${totalMins} min</strong></td>
+                    <td><span class="badge-pro">${retardsCount}</span></td>
+                    <td><span class="badge-pro" style="background:#fee2e2; color:#b91c1c;">${injustCount} j</span></td>
+                    <td><strong style="color:#b91c1c;">${totalDeduction.toLocaleString()} DZD</strong></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
     populateDropdowns() {
         const empOptions = this.employees.map(e => `<option value="${e.id}">${e.matricule} - ${e.name}</option>`).join('');
-        document.getElementById('leave-emp-select').innerHTML = empOptions;
-        document.getElementById('pay-emp-select').innerHTML = empOptions;
-        document.getElementById('wa-emp-select').innerHTML = empOptions;
+        
+        const leaveSelect = document.getElementById('leave-emp-select');
+        if (leaveSelect) leaveSelect.innerHTML = empOptions;
+
+        const dailySelect = document.getElementById('daily-emp-select');
+        if (dailySelect) dailySelect.innerHTML = empOptions;
+
+        const docSelect = document.getElementById('doc-emp-select');
+        if (docSelect) docSelect.innerHTML = empOptions;
+
+        const paySelect = document.getElementById('pay-emp-select');
+        if (paySelect) paySelect.innerHTML = empOptions;
+
+        const waSelect = document.getElementById('wa-emp-select');
+        if (waSelect) waSelect.innerHTML = empOptions;
         
         if (this.employees.length > 0) {
             this.updatePayrollCalc(this.employees[0].id);
@@ -576,6 +699,172 @@ class RHManagerApp {
         } else {
             this.showToast('Numéro de téléphone introuvable.', 'error');
         }
+    }
+
+    // Save Daily Attendance / Retard Log
+    handleSaveDailyLog() {
+        const empId = document.getElementById('daily-emp-select').value;
+        const emp = this.employees.find(e => e.id === empId);
+        const date = document.getElementById('daily-date').value || new Date().toISOString().split('T')[0];
+        const type = document.getElementById('daily-type').value;
+        const minutes = parseInt(document.getElementById('daily-minutes').value) || 0;
+        const reason = document.getElementById('daily-reason').value;
+
+        if (!emp) {
+            this.showToast('Veuillez sélectionner un employé.', 'error');
+            return;
+        }
+
+        const newLog = {
+            id: 'd_' + Date.now(),
+            matricule: emp.matricule,
+            name: emp.name,
+            date,
+            type,
+            minutes,
+            reason
+        };
+
+        this.dailyLogs.unshift(newLog);
+        this.saveState();
+        this.renderDailyLogsTable();
+        this.renderMonthlySummaryTable();
+        this.showToast('Incident de retard/absence enregistré.', 'success');
+        document.getElementById('daily-attendance-form').reset();
+    }
+
+    deleteDailyLog(id) {
+        if (confirm('Voulez-vous supprimer cet enregistrement ?')) {
+            this.dailyLogs = this.dailyLogs.filter(d => d.id !== id);
+            this.saveState();
+            this.renderDailyLogsTable();
+            this.renderMonthlySummaryTable();
+            this.showToast('Enregistrement supprimé.', 'info');
+        }
+    }
+
+    // Official Document Generator (Attestation, Titre de Congé, Convocation)
+    generateOfficialDocumentModal() {
+        const empId = document.getElementById('doc-emp-select').value;
+        const type = document.getElementById('doc-type-select').value;
+        const emp = this.employees.find(e => e.id === empId);
+
+        if (!emp) {
+            this.showToast('Sélectionnez un employé valide.', 'error');
+            return;
+        }
+
+        const today = new Date().toLocaleDateString('fr-FR');
+        let docTitle = 'DOCUMENT OFFICIEL RH';
+        let docBody = '';
+
+        if (type === 'attestation') {
+            docTitle = 'ATTESTATION DE TRAVAIL';
+            docBody = `
+                <p>Nous soussignés, <strong>ENTREPRISE RH MANAGER SARL</strong>, attestons par la présente que :</p>
+                <p style="font-size:16px; margin:15px 0;"><strong>Monsieur / Madame :</strong> ${emp.name}<br>
+                <strong>Matricule :</strong> ${emp.matricule}<br>
+                <strong>Fonction :</strong> ${emp.role}<br>
+                <strong>Date d'embauche :</strong> ${emp.start}</p>
+                <p>Est employé(e) au sein de notre établissement sous contrat <strong>${emp.duration}</strong> et est libre de tout engagement envers autrui à ce jour.</p>
+                <p>Cette attestation lui est délivrée pour servir et valoir ce que de droit.</p>
+            `;
+        } else if (type === 'titre_conge') {
+            docTitle = 'TITRE DE CONGÉ PAYÉ';
+            docBody = `
+                <p>Il est accordé à l'employé(e) : <strong>${emp.name}</strong> (Matricule ${emp.matricule}), occupant le poste de <strong>${emp.role}</strong> :</p>
+                <div style="background:#f8fafc; padding:15px; border-radius:6px; margin:15px 0;">
+                    <p><strong>Nature du congé :</strong> Congé Annuel Réglementaire</p>
+                    <p><strong>Durée accordée :</strong> 15 Jours ouvrables</p>
+                    <p><strong>Lieu de jouissance :</strong> Algérie / Étranger</p>
+                </div>
+                <p>L'intéressé(e) reprendra son travail à l'expiration de son congé le premier jour ouvrable suivant.</p>
+            `;
+        } else {
+            docTitle = 'CONVOCATION À UN ENTRETIEN RH';
+            docBody = `
+                <p>Monsieur / Madame <strong>${emp.name}</strong> (Matricule ${emp.matricule}),</p>
+                <p>Vous êtes prié(e) de bien vouloir vous présenter au bureau de la Direction des Ressources Humaines pour un entretien d'évaluation d'activité.</p>
+                <p><strong>Date de convocation :</strong> Prochain jour ouvrable à 10h00.</p>
+            `;
+        }
+
+        const content = `
+            <div style="font-family:'Inter', sans-serif; padding:30px; border:2px solid #1a73e8; border-radius:8px; background:#ffffff; color:#1e293b;">
+                <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">
+                    <div>
+                        <h2 style="color:#1a73e8; margin:0;">RH MANAGER PRO — SARL</h2>
+                        <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">Direction des Ressources Humaines — Alger</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <p style="margin:0; font-size:12px; color:#64748b;">Fait à Alger, le ${today}</p>
+                    </div>
+                </div>
+
+                <h2 style="text-align:center; color:#0f172a; margin:30px 0; letter-spacing:1px; text-decoration:underline;">${docTitle}</h2>
+
+                <div style="line-height:1.8; font-size:14px;">
+                    ${docBody}
+                </div>
+
+                <div style="margin-top:60px; display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div style="font-size:12px; color:#64748b;">
+                        <p>Cachet & Signature RH</p>
+                    </div>
+                    <div style="text-align:center;">
+                        <p style="font-weight:bold; margin-bottom:40px;">Le Directeur Général</p>
+                        <span style="font-style:italic; font-size:12px; color:#94a3b8;">[ Signature Numérique RH Manager ]</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('payslip-print-content').innerHTML = content;
+        this.modalPayslip.classList.add('active');
+    }
+
+    // CSV / Excel Export helper
+    exportToCSV(data, filename = 'export.csv') {
+        if (!data || !data.length) {
+            this.showToast('Aucune donnée à exporter.', 'error');
+            return;
+        }
+        const headers = Object.keys(data[0]).join(',');
+        const rows = data.map(obj => Object.values(obj).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers, ...rows].join('\n');
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast(`Export ${filename} téléchargé avec succès.`, 'success');
+    }
+
+    exportBilanCSV() {
+        const summaryData = this.employees.map(emp => {
+            const empLogs = this.dailyLogs.filter(d => d.matricule === emp.matricule);
+            const totalMins = empLogs.reduce((sum, d) => sum + (d.minutes || 0), 0);
+            const retardsCount = empLogs.filter(d => d.type === 'Retard').length;
+            const injustCount = empLogs.filter(d => d.type === 'Absence Injustifiée').length;
+            const baseSalary = emp.salary || 75000;
+            const hourlyRate = baseSalary / 173.33;
+            const totalDeduction = Math.round(((totalMins / 60) * hourlyRate) + (injustCount * hourlyRate * 8));
+
+            return {
+                Matricule: emp.matricule,
+                Employe: emp.name,
+                Total_Retards_Minutes: totalMins,
+                Nombre_Retards: retardsCount,
+                Absences_Injustifiees: injustCount,
+                Retenue_Estimee_DZD: totalDeduction
+            };
+        });
+
+        this.exportToCSV(summaryData, 'bilan_mensuel_retards.csv');
     }
 
     // Chart Renderings
