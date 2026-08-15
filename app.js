@@ -231,10 +231,40 @@ class RHManagerApp {
         document.getElementById('pay-panier').addEventListener('input', () => this.calcPayrollNet());
         document.getElementById('generate-payslip-btn').addEventListener('click', () => this.generatePayslipModal());
 
+        // Document type selector change (shows mission order extra fields)
+        const docTypeSelect = document.getElementById('doc-type-select');
+        if (docTypeSelect) {
+            docTypeSelect.addEventListener('change', (e) => {
+                const missionFields = document.getElementById('doc-mission-fields');
+                if (missionFields) {
+                    missionFields.style.display = (e.target.value === 'ordre_mission') ? 'block' : 'none';
+                }
+            });
+        }
+
         // Official Document Generator
         const genDocBtn = document.getElementById('generate-doc-btn');
         if (genDocBtn) {
             genDocBtn.addEventListener('click', () => this.generateOfficialDocumentModal());
+        }
+
+        // Settings Tab Form
+        const settingsForm = document.getElementById('settings-tab-form');
+        if (settingsForm) {
+            settingsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSaveSettingsTab();
+            });
+        }
+
+        const settingsLogoFile = document.getElementById('settings-company-logo-file');
+        if (settingsLogoFile) {
+            settingsLogoFile.addEventListener('change', (e) => this.handleLogoFileUpload(e));
+        }
+
+        const settingsLogoUrl = document.getElementById('settings-company-logo-url');
+        if (settingsLogoUrl) {
+            settingsLogoUrl.addEventListener('input', (e) => this.handleLogoUrlInput(e.target.value.trim()));
         }
 
         // CSV / Excel Export Buttons
@@ -315,8 +345,9 @@ class RHManagerApp {
                 'leaves': 'Gestion des Congés & Absences',
                 'zkteco': 'Gestion Pointeuse Biométrique ZKTeco',
                 'analytics': 'Statistiques & Bilan RH',
-                'finance': 'Finance & Fiches de Paye (Algérie)',
-                'documents': 'Générateur de Documents RH Officiels',
+                'finance': 'Finance & Fiches de Paye',
+                'documents': 'Générateur de Documents RH & Papers Administrative',
+                'settings': 'Configuration de l\'Entreprise & Logo',
                 'whatsapp': 'Centre de Notifications WhatsApp',
                 'outlook': 'Intégration Microsoft Outlook'
             };
@@ -892,13 +923,15 @@ class RHManagerApp {
     }
 
     updateLogoPreviewBox(logoSource) {
-        const previewBox = document.getElementById('logo-preview-box');
-        if (!previewBox) return;
-        if (logoSource) {
-            previewBox.innerHTML = `<img src="${logoSource}" class="logo-preview-img" alt="Logo Entreprise" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\"text-danger\">Erreur de chargement d\'image</span>';">`;
-        } else {
-            previewBox.innerHTML = `<span class="text-muted">Aucun logo personnalisé (Nom de l'entreprise affiché en texte par défaut)</span>`;
-        }
+        ['logo-preview-box', 'settings-logo-preview'].forEach(id => {
+            const previewBox = document.getElementById(id);
+            if (!previewBox) return;
+            if (logoSource) {
+                previewBox.innerHTML = `<img src="${logoSource}" class="logo-preview-img" alt="Logo Entreprise" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\"text-danger\">Erreur de chargement d\'image</span>';">`;
+            } else {
+                previewBox.innerHTML = `<span class="text-muted">Aucun logo personnalisé (Nom de l'entreprise affiché en texte par défaut)</span>`;
+            }
+        });
     }
 
     handleLogoFileUpload(e) {
@@ -910,8 +943,10 @@ class RHManagerApp {
             const dataUrl = event.target.result;
             this.tempUploadedLogo = dataUrl;
             this.updateLogoPreviewBox(dataUrl);
-            const logoUrlInput = document.getElementById('company-logo-url');
-            if (logoUrlInput) logoUrlInput.value = '';
+            ['company-logo-url', 'settings-company-logo-url'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
         };
         reader.readAsDataURL(file);
     }
@@ -941,6 +976,21 @@ class RHManagerApp {
         this.showToast('Paramètres & Logo entreprise mis à jour avec succès.', 'success');
     }
 
+    handleSaveSettingsTab() {
+        this.company.name = document.getElementById('settings-company-name').value.trim() || 'ENTREPRISE RH MANAGER SARL';
+        this.company.address = document.getElementById('settings-company-address').value.trim() || 'Alger, Algérie';
+        this.company.nif = document.getElementById('settings-company-nif').value.trim();
+        this.company.director = document.getElementById('settings-company-director').value.trim() || 'Le Directeur Général';
+        
+        if (this.tempUploadedLogo !== undefined) {
+            this.company.logo = this.tempUploadedLogo;
+        }
+
+        this.saveState();
+        this.renderCompanyBrandingWidgets();
+        this.showToast('Configuration globale de l\'entreprise & logo enregistrés.', 'success');
+    }
+
     renderCompanyBrandingWidgets() {
         const docPreviewBox = document.getElementById('doc-logo-current-preview');
         if (docPreviewBox) {
@@ -950,6 +1000,18 @@ class RHManagerApp {
                 docPreviewBox.innerHTML = `<strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>`;
             }
         }
+
+        // Sync inputs in settings tab
+        const sName = document.getElementById('settings-company-name');
+        if (sName) sName.value = this.company.name || '';
+        const sAddr = document.getElementById('settings-company-address');
+        if (sAddr) sAddr.value = this.company.address || '';
+        const sNif = document.getElementById('settings-company-nif');
+        if (sNif) sNif.value = this.company.nif || '';
+        const sDir = document.getElementById('settings-company-director');
+        if (sDir && this.company.director) sDir.value = this.company.director;
+
+        this.updateLogoPreviewBox(this.company.logo);
     }
 
     // ZKTeco Biometric Handlers
@@ -1051,7 +1113,72 @@ class RHManagerApp {
         let docTitle = 'DOCUMENT OFFICIEL RH';
         let docBody = '';
 
-        if (type === 'attestation') {
+        if (type === 'ordre_mission') {
+            const dest = document.getElementById('doc-mission-destination')?.value.trim() || 'Oran, Algérie';
+            const transport = document.getElementById('doc-mission-transport')?.value.trim() || 'Véhicule de Service (Immatriculation 00192-120-16)';
+            const reason = document.getElementById('doc-mission-reason')?.value.trim() || 'Mission d\'accompagnement technique et suivi d\'activité';
+            
+            docTitle = 'ORDRE DE MISSION PERMANENT';
+            docBody = `
+                <p style="text-align:right; font-size:12px; font-weight:bold; color:#475569;">N° Réf: OM-${Date.now().toString().slice(-5)}/${new Date().getFullYear()}</p>
+                <p>Il est ordonné à l'agent ci-après désigné de se rendre en mission de service :</p>
+                <div style="background:#f8fafc; padding:18px; border-radius:6px; margin:20px 0; border:1px solid #cbd5e1; line-height:1.8;">
+                    <p style="margin:4px 0;"><strong>Nom & Prénom :</strong> ${emp.name}</p>
+                    <p style="margin:4px 0;"><strong>Matricule :</strong> ${emp.matricule}</p>
+                    <p style="margin:4px 0;"><strong>Fonction / Poste :</strong> ${emp.role}</p>
+                    <p style="margin:4px 0;"><strong>Lieu de Destination :</strong> ${dest}</p>
+                    <p style="margin:4px 0;"><strong>Moyen de Transport :</strong> ${transport}</p>
+                    <p style="margin:4px 0;"><strong>Objet de la Mission :</strong> ${reason}</p>
+                    <p style="margin:4px 0;"><strong>Date de Départ Prévue :</strong> ${today}</p>
+                </div>
+                <p>Les autorités civiles et militaires sont priées de prêter aide et assistance au porteur du présent ordre de mission en cas de besoin.</p>
+                <p style="font-size:13px; color:#64748b; margin-top:15px;"><em>Note : Frais de déplacement et d'hébergement pris en charge conformément au barème réglementaire de l'entreprise.</em></p>
+            `;
+        } else if (type === 'demande_conge') {
+            docTitle = 'FORMULAIRE DE DEMANDE DE CONGÉ';
+            docBody = `
+                <p style="text-align:right; font-size:12px; font-weight:bold; color:#475569;">Code RH-DC-${emp.matricule}</p>
+                <div style="background:#f8fafc; padding:18px; border-radius:6px; margin:15px 0; border:1px solid #cbd5e1;">
+                    <p style="margin:4px 0;"><strong>Demandeur(se) :</strong> ${emp.name} (Matricule ${emp.matricule})</p>
+                    <p style="margin:4px 0;"><strong>Poste Occupé :</strong> ${emp.role}</p>
+                    <p style="margin:4px 0;"><strong>Nombre de jours demandés :</strong> 15 Jours ouvrables</p>
+                    <p style="margin:4px 0;"><strong>Motif du congé :</strong> Congé Annuel Réglementaire</p>
+                </div>
+                <table style="width:100%; border-collapse:collapse; margin:20px 0; font-size:13px; border:1px solid #cbd5e1;">
+                    <thead>
+                        <tr style="background:#e2e8f0; text-align:left;">
+                            <th style="padding:8px; border:1px solid #cbd5e1;">Avis du Responsable Hiérarchique</th>
+                            <th style="padding:8px; border:1px solid #cbd5e1;">Décision Direction RH</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:15px; border:1px solid #cbd5e1;">
+                                <p style="margin:0 0 10px 0;">[  ] Favorable &nbsp;&nbsp;&nbsp; [  ] Défavorable</p>
+                                <p style="margin:0; font-size:11px; color:#64748b;">Signature Chef de Service :</p>
+                            </td>
+                            <td style="padding:15px; border:1px solid #cbd5e1;">
+                                <p style="margin:0 0 10px 0;">[  ] Accordé &nbsp;&nbsp;&nbsp; [  ] Reporté</p>
+                                <p style="margin:0; font-size:11px; color:#64748b;">Cachet RH :</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        } else if (type === 'decision_embauche') {
+            docTitle = 'DÉCISION D\'ENGAGEMENT ET D\'AFFECTATION';
+            docBody = `
+                <p style="text-align:right; font-size:12px; font-weight:bold; color:#475569;">N° Réf: DEC-${emp.matricule}/${new Date().getFullYear()}</p>
+                <p>Le Directeur Général de <strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>,</p>
+                <p style="margin-top:15px;"><strong>DÉCIDE :</strong></p>
+                <div style="background:#f8fafc; padding:18px; border-radius:6px; margin:15px 0; border:1px solid #cbd5e1; line-height:1.8;">
+                    <p style="margin:4px 0;"><strong>Article 1 :</strong> Monsieur / Madame <strong>${emp.name}</strong> est recruté(e) en qualité de <strong>${emp.role}</strong>.</p>
+                    <p style="margin:4px 0;"><strong>Article 2 :</strong> L'intéressé(e) est immatriculé(e) sous le numéro de matricule interne <strong>${emp.matricule}</strong>.</p>
+                    <p style="margin:4px 0;"><strong>Article 3 :</strong> Le présent engagement prend effet à compter du <strong>${emp.start}</strong> sous contrat type <strong>${emp.duration}</strong>.</p>
+                </div>
+                <p>Le Directeur des Ressources Humaines et le Directeur Financier sont chargés, chacun en ce qui le concerne, de l'exécution de la présente décision.</p>
+            `;
+        } else if (type === 'attestation') {
             docTitle = 'ATTESTATION DE TRAVAIL';
             docBody = `
                 <p>Nous soussignés, <strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>, attestons par la présente que :</p>
@@ -1117,7 +1244,7 @@ class RHManagerApp {
                         <p style="margin:0;">Cachet & Signature RH</p>
                     </div>
                     <div style="text-align:center;">
-                        <p style="font-weight:bold; margin:0 0 45px 0;">Le Directeur Général</p>
+                        <p style="font-weight:bold; margin:0 0 45px 0;">${this.company.director || 'Le Directeur Général'}</p>
                         <span style="font-style:italic; font-size:11px; color:#94a3b8;">[ Empreinte Numérique RH Manager ]</span>
                     </div>
                 </div>
