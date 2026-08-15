@@ -551,27 +551,46 @@
 
                 <!-- Tab: Documents RH Generator -->
                 <section class="tab-panel" id="tab-documents">
-                    <div class="card max-w-700">
-                        <div class="card-header">
-                            <h3><i class="fa-solid fa-file-contract"></i> Générateur de Documents RH Officiels</h3>
+                    <div class="grid-2col-layout">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-file-contract"></i> Générateur de Documents RH Officiels</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="doc-emp-select">Sélectionner l'Employé</label>
+                                    <select id="doc-emp-select" class="form-control"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="doc-type-select">Type de Document</label>
+                                    <select id="doc-type-select" class="form-control">
+                                        <option value="attestation">Attestation de Travail Officielle</option>
+                                        <option value="titre_conge">Titre de Congé Payé</option>
+                                        <option value="certificat">Certificat de Travail (Fin de contrat)</option>
+                                        <option value="convocation">Convocation RH / Entretien</option>
+                                    </select>
+                                </div>
+                                <button id="generate-doc-btn" class="btn-primary btn-block">
+                                    <i class="fa-solid fa-print"></i> Générer & Visualiser le Document (Format A4)
+                                </button>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label for="doc-emp-select">Sélectionner l'Employé</label>
-                                <select id="doc-emp-select" class="form-control"></select>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-building-flag"></i> En-tête & Logo de l'Entreprise</h3>
                             </div>
-                            <div class="form-group">
-                                <label for="doc-type-select">Type de Document</label>
-                                <select id="doc-type-select" class="form-control">
-                                    <option value="attestation">Attestation de Travail Officielle</option>
-                                    <option value="titre_conge">Titre de Congé Payé</option>
-                                    <option value="certificat">Certificat de Travail (Fin de contrat)</option>
-                                    <option value="convocation">Convocation RH / Entretien</option>
-                                </select>
+                            <div class="card-body">
+                                <p class="text-muted mb-3" style="font-size:13px;">
+                                    Le logo et l'en-tête ci-dessous apparaîtront automatiquement sur toutes vos attestations, titres de congé, bulletins de paye et fichiers d'export Excel.
+                                </p>
+                                <div id="doc-logo-current-preview" class="logo-preview-container mb-3">
+                                    <!-- Dynamic current logo preview -->
+                                </div>
+                                <button type="button" id="doc-edit-logo-btn" class="btn-secondary btn-block" onclick="if(window.app) window.app.openLogoModal()">
+                                    <i class="fa-solid fa-pen-to-square"></i> Modifier le Logo & Raison Sociale
+                                </button>
                             </div>
-                            <button id="generate-doc-btn" class="btn-primary btn-block">
-                                <i class="fa-solid fa-print"></i> Générer & Visualiser le Document
-                            </button>
                         </div>
                     </div>
                 </section>
@@ -779,19 +798,23 @@
         </div>
     </div>
 
-    <!-- Modal: Payslip Preview -->
+    <!-- Modal: Payslip & Official Document Preview -->
     <div class="modal-overlay" id="modal-payslip">
         <div class="modal-container modal-lg">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-file-invoice"></i> Bulletin de Paye Officiel</h3>
-                <button class="modal-close" id="modal-payslip-close">&times;</button>
+                <h3><i class="fa-solid fa-file-invoice"></i> Visualisation du Document RH</h3>
+                <button type="button" class="modal-close" id="modal-payslip-close" onclick="if(window.app) window.app.closeModal(document.getElementById('modal-payslip'))">&times;</button>
             </div>
             <div class="modal-body" id="payslip-print-content">
                 <!-- Generated by JS -->
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" id="modal-payslip-close-btn">Fermer</button>
-                <button class="btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimer / PDF</button>
+                <button type="button" class="btn-secondary" id="modal-payslip-close-btn" onclick="if(window.app) window.app.closeModal(document.getElementById('modal-payslip'))">
+                    <i class="fa-solid fa-xmark"></i> Fermer Document
+                </button>
+                <button type="button" class="btn-primary" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Imprimer Document (A4)
+                </button>
             </div>
         </div>
     </div>
@@ -801,7 +824,7 @@
         <div class="modal-container">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-building"></i> Personnaliser l'En-tête & Logo de l'Entreprise</h3>
-                <button class="modal-close" id="modal-logo-close">&times;</button>
+                <button type="button" class="modal-close" id="modal-logo-close" onclick="if(window.app) window.app.closeModal(document.getElementById('modal-company-logo'))">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="company-logo-form">
@@ -818,15 +841,22 @@
                         <input type="text" id="company-nif-input" class="form-control" value="NIF: 001916019283746 | NIS: 198273645">
                     </div>
                     <div class="form-group">
-                        <label for="company-logo-file">Logo de l'Entreprise (Image PNG/JPG)</label>
+                        <label for="company-logo-file"><i class="fa-solid fa-upload"></i> Option 1: Importer Fichier Image Logo (PNG/JPG)</label>
                         <input type="file" id="company-logo-file" accept="image/*" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="company-logo-url"><i class="fa-solid fa-link"></i> Option 2: Ou Coller l'URL Web du Logo</label>
+                        <input type="url" id="company-logo-url" class="form-control" placeholder="https://mon-entreprise.com/logo.png">
+                    </div>
+                    <div class="form-group">
+                        <label>Aperçu du Logo d'Entreprise</label>
                         <div id="logo-preview-box" class="logo-preview-container">
-                            <span class="text-muted">Aucun logo personnalisé importé (Logo par défaut actif)</span>
+                            <span class="text-muted">Aucun logo personnalisé (Nom de l'entreprise affiché en texte par défaut)</span>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" id="modal-logo-cancel">Annuler</button>
-                        <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Appliquer aux Fiches & Exports</button>
+                        <button type="button" class="btn-secondary" id="modal-logo-cancel" onclick="if(window.app) window.app.closeModal(document.getElementById('modal-company-logo'))">Annuler</button>
+                        <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Appliquer aux Documents & Exports</button>
                     </div>
                 </form>
             </div>

@@ -103,13 +103,25 @@ class RHManagerApp {
             });
         });
 
-        // Keyboard Shortcut: Ctrl + K for Smart Search
+        // Keyboard Shortcut: Ctrl + K for Smart Search, Escape to close modals
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
                 const searchInput = document.getElementById('global-search');
                 if (searchInput) searchInput.focus();
             }
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(modal => this.closeModal(modal));
+            }
+        });
+
+        // Close modal when clicking backdrop outside container
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    this.closeModal(overlay);
+                }
+            });
         });
 
         // Subtabs switching (Leaves & Finance)
@@ -153,6 +165,11 @@ class RHManagerApp {
             logoFile.addEventListener('change', (e) => this.handleLogoFileUpload(e));
         }
 
+        const logoUrlInput = document.getElementById('company-logo-url');
+        if (logoUrlInput) {
+            logoUrlInput.addEventListener('input', (e) => this.handleLogoUrlInput(e.target.value.trim()));
+        }
+
         // ZKTeco Biometric Handlers
         const zkForm = document.getElementById('zk-punch-form');
         if (zkForm) {
@@ -172,10 +189,15 @@ class RHManagerApp {
         document.getElementById('add-emp-btn').addEventListener('click', () => this.openEmployeeModal());
         
         // Modal cancel/close
-        document.getElementById('modal-emp-close').addEventListener('click', () => this.closeModal(this.modalEmp));
-        document.getElementById('modal-emp-cancel').addEventListener('click', () => this.closeModal(this.modalEmp));
-        document.getElementById('modal-payslip-close').addEventListener('click', () => this.closeModal(this.modalPayslip));
-        document.getElementById('modal-payslip-close-btn').addEventListener('click', () => this.closeModal(this.modalPayslip));
+        const empClose = document.getElementById('modal-emp-close');
+        if (empClose) empClose.addEventListener('click', () => this.closeModal(this.modalEmp));
+        const empCancel = document.getElementById('modal-emp-cancel');
+        if (empCancel) empCancel.addEventListener('click', () => this.closeModal(this.modalEmp));
+        
+        const payslipClose = document.getElementById('modal-payslip-close');
+        if (payslipClose) payslipClose.addEventListener('click', () => this.closeModal(this.modalPayslip));
+        const payslipCloseBtn = document.getElementById('modal-payslip-close-btn');
+        if (payslipCloseBtn) payslipCloseBtn.addEventListener('click', () => this.closeModal(this.modalPayslip));
 
         // Employee Form Submit
         document.getElementById('employee-modal-form').addEventListener('submit', (e) => {
@@ -315,6 +337,7 @@ class RHManagerApp {
         this.renderDailyLogsTable();
         this.renderMonthlySummaryTable();
         this.renderZKLogsTable();
+        this.renderCompanyBrandingWidgets();
         this.populateDropdowns();
         this.renderPayrollTable();
         this.renderCharts();
@@ -688,29 +711,34 @@ class RHManagerApp {
         const cnas = Math.round(base * 0.09);
         const net = document.getElementById('pay-net-result').textContent;
 
+        const companyLogoHtml = this.company.logo ? 
+            `<img src="${this.company.logo}" style="max-height:65px; max-width:200px; object-fit:contain; margin-bottom:6px;">` :
+            `<h2 style="color:#1a73e8; margin:0;">${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</h2>`;
+
         const content = `
-            <div style="font-family: Inter, sans-serif; padding: 20px; border: 2px solid #1a73e8; border-radius: 8px;">
+            <div class="a4-document" style="font-family: Inter, sans-serif; padding: 25px; border: 2px solid #1a73e8; border-radius: 8px; background:#ffffff; color:#0f172a;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #cbd5e1; padding-bottom: 15px;">
                     <div>
-                        <h2 style="color:#1a73e8; margin:0;">ENTREPRISE RH MANAGER SARL</h2>
-                        <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">Zone Industrielle Chéraga, Alger, Algérie</p>
+                        ${companyLogoHtml}
+                        <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">${this.company.address || 'Alger, Algérie'}</p>
+                        <p style="margin:2px 0 0 0; color:#94a3b8; font-size:11px;">${this.company.nif || ''}</p>
                     </div>
                     <div style="text-align:right;">
-                        <h3 style="margin:0;">BULLETIN DE PAYE</h3>
+                        <h3 style="margin:0; color:#1e293b;">BULLETIN DE PAYE</h3>
                         <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">Période : Mois en cours ${new Date().getFullYear()}</p>
                     </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin: 20px 0; background:#f8fafc; padding:15px; border-radius:6px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin: 20px 0; background:#f8fafc; padding:15px; border-radius:6px; border:1px solid #e2e8f0;">
                     <div>
-                        <p><strong>Matricule :</strong> ${emp ? emp.matricule : '101'}</p>
-                        <p><strong>Nom & Prénom :</strong> ${emp ? emp.name : 'Karim Benali'}</p>
-                        <p><strong>Poste / Fonction :</strong> ${emp ? emp.role : 'Ingénieur'}</p>
+                        <p style="margin:4px 0;"><strong>Matricule :</strong> ${emp ? emp.matricule : '101'}</p>
+                        <p style="margin:4px 0;"><strong>Nom & Prénom :</strong> ${emp ? emp.name : 'Karim Benali'}</p>
+                        <p style="margin:4px 0;"><strong>Poste / Fonction :</strong> ${emp ? emp.role : 'Ingénieur'}</p>
                     </div>
                     <div>
-                        <p><strong>N° Sécurité Sociale :</strong> 9900${emp ? emp.matricule : '101'}045</p>
-                        <p><strong>Situation Familiale :</strong> Marié(e)</p>
-                        <p><strong>Mode de Règlement :</strong> Virement CCP / Banque</p>
+                        <p style="margin:4px 0;"><strong>N° Sécurité Sociale :</strong> 9900${emp ? emp.matricule : '101'}045</p>
+                        <p style="margin:4px 0;"><strong>Situation Familiale :</strong> Marié(e)</p>
+                        <p style="margin:4px 0;"><strong>Mode de Règlement :</strong> Virement CCP / Banque</p>
                     </div>
                 </div>
 
@@ -740,6 +768,13 @@ class RHManagerApp {
                             <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">-</td>
                         </tr>
                         <tr>
+                            <td style="padding:8px; border-bottom:1px solid #e2e8f0;">Indemnité Panier</td>
+                            <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">${panier.toLocaleString()}</td>
+                            <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">-</td>
+                            <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">${panier.toLocaleString()}</td>
+                            <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">-</td>
+                        </tr>
+                        <tr>
                             <td style="padding:8px; border-bottom:1px solid #e2e8f0;">Cotisation Salariale CNAS</td>
                             <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">${base.toLocaleString()}</td>
                             <td style="padding:8px; border-bottom:1px solid #e2e8f0; text-align:right;">9.0%</td>
@@ -749,9 +784,19 @@ class RHManagerApp {
                     </tbody>
                 </table>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#ecfdf5; border:1px solid #a7f3d0; padding:15px; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#ecfdf5; border:1px solid #a7f3d0; padding:15px; border-radius:8px; margin-bottom:25px;">
                     <span style="font-size:16px; font-weight:700; color:#065f46;">NET À PAYER :</span>
                     <h2 style="margin:0; color:#047857;">${net}</h2>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:30px;">
+                    <div style="font-size:12px; color:#64748b;">
+                        <p style="margin:0;">Cachet & Signature de l'Employé</p>
+                    </div>
+                    <div style="text-align:center;">
+                        <p style="font-weight:bold; margin:0 0 35px 0;">Le Directeur Général</p>
+                        <span style="font-style:italic; font-size:11px; color:#94a3b8;">[ Empreinte Numérique RH Manager ]</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -836,15 +881,24 @@ class RHManagerApp {
         document.getElementById('company-name-input').value = this.company.name || 'ENTREPRISE RH MANAGER SARL';
         document.getElementById('company-address-input').value = this.company.address || 'Zone Industrielle Chéraga, Alger, Algérie';
         document.getElementById('company-nif-input').value = this.company.nif || 'NIF: 001916019283746 | NIS: 198273645';
-
-        const previewBox = document.getElementById('logo-preview-box');
-        if (this.company.logo) {
-            previewBox.innerHTML = `<img src="${this.company.logo}" class="logo-preview-img" alt="Logo Entreprise">`;
-        } else {
-            previewBox.innerHTML = `<span class="text-muted">Aucun logo personnalisé importé (Logo par défaut actif)</span>`;
+        
+        const logoUrlInput = document.getElementById('company-logo-url');
+        if (logoUrlInput) {
+            logoUrlInput.value = (this.company.logo && this.company.logo.startsWith('http')) ? this.company.logo : '';
         }
 
+        this.updateLogoPreviewBox(this.company.logo);
         this.modalLogo.classList.add('active');
+    }
+
+    updateLogoPreviewBox(logoSource) {
+        const previewBox = document.getElementById('logo-preview-box');
+        if (!previewBox) return;
+        if (logoSource) {
+            previewBox.innerHTML = `<img src="${logoSource}" class="logo-preview-img" alt="Logo Entreprise" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\"text-danger\">Erreur de chargement d\'image</span>';">`;
+        } else {
+            previewBox.innerHTML = `<span class="text-muted">Aucun logo personnalisé (Nom de l'entreprise affiché en texte par défaut)</span>`;
+        }
     }
 
     handleLogoFileUpload(e) {
@@ -855,22 +909,47 @@ class RHManagerApp {
         reader.onload = (event) => {
             const dataUrl = event.target.result;
             this.tempUploadedLogo = dataUrl;
-            document.getElementById('logo-preview-box').innerHTML = `<img src="${dataUrl}" class="logo-preview-img" alt="Aperçu Logo">`;
+            this.updateLogoPreviewBox(dataUrl);
+            const logoUrlInput = document.getElementById('company-logo-url');
+            if (logoUrlInput) logoUrlInput.value = '';
         };
         reader.readAsDataURL(file);
     }
 
+    handleLogoUrlInput(url) {
+        if (url) {
+            this.tempUploadedLogo = url;
+            this.updateLogoPreviewBox(url);
+        } else {
+            this.tempUploadedLogo = '';
+            this.updateLogoPreviewBox(this.company.logo);
+        }
+    }
+
     handleSaveCompanySettings() {
-        this.company.name = document.getElementById('company-name-input').value;
-        this.company.address = document.getElementById('company-address-input').value;
-        this.company.nif = document.getElementById('company-nif-input').value;
-        if (this.tempUploadedLogo) {
+        this.company.name = document.getElementById('company-name-input').value.trim() || 'ENTREPRISE RH MANAGER SARL';
+        this.company.address = document.getElementById('company-address-input').value.trim() || 'Alger, Algérie';
+        this.company.nif = document.getElementById('company-nif-input').value.trim();
+        
+        if (this.tempUploadedLogo !== undefined) {
             this.company.logo = this.tempUploadedLogo;
         }
 
         this.saveState();
         this.closeModal(this.modalLogo);
+        this.renderCompanyBrandingWidgets();
         this.showToast('Paramètres & Logo entreprise mis à jour avec succès.', 'success');
+    }
+
+    renderCompanyBrandingWidgets() {
+        const docPreviewBox = document.getElementById('doc-logo-current-preview');
+        if (docPreviewBox) {
+            if (this.company.logo) {
+                docPreviewBox.innerHTML = `<img src="${this.company.logo}" style="max-height:55px; max-width:180px; object-fit:contain;">`;
+            } else {
+                docPreviewBox.innerHTML = `<strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>`;
+            }
+        }
     }
 
     // ZKTeco Biometric Handlers
@@ -976,35 +1055,46 @@ class RHManagerApp {
             docTitle = 'ATTESTATION DE TRAVAIL';
             docBody = `
                 <p>Nous soussignés, <strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>, attestons par la présente que :</p>
-                <p style="font-size:16px; margin:15px 0;"><strong>Monsieur / Madame :</strong> ${emp.name}<br>
+                <p style="font-size:16px; margin:20px 0;"><strong>Monsieur / Madame :</strong> ${emp.name}<br>
                 <strong>Matricule :</strong> ${emp.matricule}<br>
                 <strong>Fonction :</strong> ${emp.role}<br>
                 <strong>Date d'embauche :</strong> ${emp.start}</p>
                 <p>Est employé(e) au sein de notre établissement sous contrat <strong>${emp.duration}</strong> et est libre de tout engagement envers autrui à ce jour.</p>
-                <p>Cette attestation lui est délivrée pour servir et valoir ce que de droit.</p>
+                <p>Cette attestation lui est délivrée sur sa demande pour servir et valoir ce que de droit.</p>
             `;
         } else if (type === 'titre_conge') {
             docTitle = 'TITRE DE CONGÉ PAYÉ';
             docBody = `
                 <p>Il est accordé à l'employé(e) : <strong>${emp.name}</strong> (Matricule ${emp.matricule}), occupant le poste de <strong>${emp.role}</strong> :</p>
-                <div style="background:#f8fafc; padding:15px; border-radius:6px; margin:15px 0;">
-                    <p><strong>Nature du congé :</strong> Congé Annuel Réglementaire</p>
-                    <p><strong>Durée accordée :</strong> 15 Jours ouvrables</p>
-                    <p><strong>Lieu de jouissance :</strong> Algérie / Étranger</p>
+                <div style="background:#f8fafc; padding:20px; border-radius:6px; margin:20px 0; border:1px solid #e2e8f0;">
+                    <p style="margin:5px 0;"><strong>Nature du congé :</strong> Congé Annuel Réglementaire</p>
+                    <p style="margin:5px 0;"><strong>Durée accordée :</strong> 15 Jours ouvrables</p>
+                    <p style="margin:5px 0;"><strong>Lieu de jouissance :</strong> Algérie / Étranger</p>
                 </div>
                 <p>L'intéressé(e) reprendra son travail à l'expiration de son congé le premier jour ouvrable suivant.</p>
+            `;
+        } else if (type === 'certificat') {
+            docTitle = 'CERTIFICAT DE TRAVAIL';
+            docBody = `
+                <p>Nous soussignés, <strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>, certifions que :</p>
+                <p style="font-size:16px; margin:20px 0;"><strong>Monsieur / Madame :</strong> ${emp.name}<br>
+                <strong>Matricule :</strong> ${emp.matricule}<br>
+                <strong>Fonction occupée :</strong> ${emp.role}<br>
+                <strong>Période d'emploi :</strong> Du ${emp.start} à ce jour</p>
+                <p>L'intéressé(e) quitte notre société libre de tout engagement. Ce certificat est délivré pour faire valoir ses droits aux organismes de prévoyance et de retraite.</p>
             `;
         } else {
             docTitle = 'CONVOCATION À UN ENTRETIEN RH';
             docBody = `
                 <p>Monsieur / Madame <strong>${emp.name}</strong> (Matricule ${emp.matricule}),</p>
-                <p>Vous êtes prié(e) de bien vouloir vous présenter au bureau de la Direction des Ressources Humaines pour un entretien d'évaluation d'activité.</p>
-                <p><strong>Date de convocation :</strong> Prochain jour ouvrable à 10h00.</p>
+                <p>Vous êtes prié(e) de bien vouloir vous présenter au bureau de la Direction des Ressources Humaines pour un entretien d'évaluation et de mise au point d'activité.</p>
+                <p style="margin-top:15px;"><strong>Date & Heure :</strong> Prochain jour ouvrable à 10h00.</p>
+                <p><strong>Lieu :</strong> Siège Social - Salle de Réunion RH.</p>
             `;
         }
 
         const content = `
-            <div style="font-family:'Inter', sans-serif; padding:30px; border:2px solid #1a73e8; border-radius:8px; background:#ffffff; color:#1e293b;">
+            <div class="a4-document" style="font-family:'Inter', sans-serif; padding:35px; border:2px solid #1a73e8; border-radius:8px; background:#ffffff; color:#1e293b;">
                 <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">
                     <div>
                         ${companyLogoHtml}
@@ -1016,19 +1106,19 @@ class RHManagerApp {
                     </div>
                 </div>
 
-                <h2 style="text-align:center; color:#0f172a; margin:30px 0; letter-spacing:1px; text-decoration:underline;">${docTitle}</h2>
+                <h2 style="text-align:center; color:#0f172a; margin:35px 0; letter-spacing:1px; text-decoration:underline;">${docTitle}</h2>
 
-                <div style="line-height:1.8; font-size:14px;">
+                <div style="line-height:1.9; font-size:15px;">
                     ${docBody}
                 </div>
 
-                <div style="margin-top:60px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div style="margin-top:80px; display:flex; justify-content:space-between; align-items:flex-end;">
                     <div style="font-size:12px; color:#64748b;">
-                        <p>Cachet & Signature RH</p>
+                        <p style="margin:0;">Cachet & Signature RH</p>
                     </div>
                     <div style="text-align:center;">
-                        <p style="font-weight:bold; margin-bottom:40px;">Le Directeur Général</p>
-                        <span style="font-style:italic; font-size:12px; color:#94a3b8;">[ Signature Numérique RH Manager ]</span>
+                        <p style="font-weight:bold; margin:0 0 45px 0;">Le Directeur Général</p>
+                        <span style="font-style:italic; font-size:11px; color:#94a3b8;">[ Empreinte Numérique RH Manager ]</span>
                     </div>
                 </div>
             </div>

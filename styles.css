@@ -1077,20 +1077,87 @@ body {
     }
 }
 
-/* ─── Responsive: Small Phone (≤480px) ──────────────────────────────── */
-@media (max-width: 480px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
+/* Modal Backdrop Fix & Click Pointer */
+.modal-overlay {
+    cursor: pointer;
+}
+
+.modal-container {
+    cursor: auto;
+}
+
+/* ─── A4 Printable Document Layout (@media print) ───────────────────── */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm 15mm 12mm 15mm;
     }
 
-    .topbar-actions {
-        flex-direction: column;
-        gap: 8px;
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    .btn-primary, .btn-secondary, .btn-success {
-        width: 100%;
-        justify-content: center;
+    /* Hide UI navigation, banners, sidebars, header, toast container, and modals except active printable modal */
+    .sidebar, 
+    .topbar, 
+    .demo-banner, 
+    .mobile-menu-toggle, 
+    #toast-container,
+    .modal-header, 
+    .modal-footer,
+    .modal-overlay:not(#modal-payslip) {
+        display: none !important;
+    }
+
+    /* Target printable modal overlay */
+    #modal-payslip {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    #modal-payslip .modal-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    #payslip-print-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        font-size: 11pt !important;
+        line-height: 1.6 !important;
+    }
+
+    .a4-document {
+        width: 100% !important;
+        min-height: 270mm !important;
+        padding: 10mm !important;
+        box-sizing: border-box !important;
+        background: #ffffff !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
     }
 }
 
