@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RH Manager Pro — Démo en Ligne</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-users-gear"></i>
+                </div>
+                <div class="brand-info">
+                    <h2>RH Manager</h2>
+                    <span class="badge-pro">PRO v3.5</span>
+                </div>
+            </div>
+
+            <div class="user-card">
+                <div class="avatar">PDG</div>
+                <div class="user-details">
+                    <span class="user-name">Directeur Général</span>
+                    <span class="user-role"><i class="fa-solid fa-crown"></i> Administrateur (PDG)</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-link active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> Tableau de Bord
+                </a>
+                <a href="#" class="nav-link" data-tab="employees">
+                    <i class="fa-solid fa-user-group"></i> Employés
+                    <span class="badge-count" id="emp-count-badge">0</span>
+                </a>
+                <a href="#" class="nav-link" data-tab="leaves">
+                    <i class="fa-solid fa-calendar-check"></i> Congés & Absences
+                    <span class="badge-count warning" id="leave-count-badge">0</span>
+                </a>
+                <a href="#" class="nav-link" data-tab="analytics">
+                    <i class="fa-solid fa-chart-line"></i> Statistiques & Analytics
+                </a>
+                <a href="#" class="nav-link" data-tab="finance">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Finance & Paie RH
+                </a>
+                <a href="#" class="nav-link" data-tab="whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp / SMS
+                </a>
+                <a href="#" class="nav-link" data-tab="outlook">
+                    <i class="fa-solid fa-envelope"></i> Microsoft Outlook
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="demo-notice">
+                    <i class="fa-solid fa-circle-info"></i> Mode Démo Interactive
+                </div>
+                <button id="reset-demo-btn" class="btn-secondary btn-sm">
+                    <i class="fa-solid fa-rotate-left"></i> Réinitialiser Données
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1 id="page-title">Tableau de Bord RH</h1>
+                    <p id="page-subtitle">Vue d'ensemble et métriques clés des ressources humaines</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="global-search" placeholder="Rechercher employé, matricule...">
+                    </div>
+                    <button class="btn-primary" id="quick-add-emp-btn">
+                        <i class="fa-solid fa-user-plus"></i> Nouvel Employé
+                    </button>
+                </div>
+            </header>
+
+            <!-- Tab Panels -->
+            <div class="content-body">
+                <!-- Tab 1: Dashboard -->
+                <section class="tab-panel active" id="tab-dashboard">
+                    <!-- KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card blue">
+                            <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Effectif Total</span>
+                                <h3 class="kpi-value" id="kpi-total-emp">0</h3>
+                                <span class="kpi-trend positive"><i class="fa-solid fa-arrow-up"></i> +4 ce mois</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card green">
+                            <div class="kpi-icon"><i class="fa-solid fa-user-check"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Employés Actifs</span>
+                                <h3 class="kpi-value" id="kpi-active-emp">0</h3>
+                                <span class="kpi-subtext">Présents au poste</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card orange">
+                            <div class="kpi-icon"><i class="fa-solid fa-umbrella-beach"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">En Congé Actuel</span>
+                                <h3 class="kpi-value" id="kpi-on-leave">0</h3>
+                                <span class="kpi-subtext">Absences autorisées</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card purple">
+                            <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                            <div class="kpi-content">
+                                <span class="kpi-label">Masse Salariale Est.</span>
+                                <h3 class="kpi-value" id="kpi-payroll">0 DZD</h3>
+                                <span class="kpi-subtext">Estimation mensuelle</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="charts-grid">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-chart-area"></i> Évolution des Recrutements & Départs</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chart-recruitment"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-chart-pie"></i> Répartition des Congés par Type</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chart-leaves-pie"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity & Quick Overview -->
+                    <div class="grid-2col">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-clock-rotate-left"></i> Derniers Congés Enregistrés</h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="data-table" id="table-dashboard-leaves">
+                                    <thead>
+                                        <tr>
+                                            <th>Employé</th>
+                                            <th>Type</th>
+                                            <th>Début</th>
+                                            <th>Fin</th>
+                                            <th>Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Rendered by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-triangle-exclamation"></i> Alertes Fin de Contrat (CDD)</h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="data-table" id="table-dashboard-contracts">
+                                    <thead>
+                                        <tr>
+                                            <th>Matricule</th>
+                                            <th>Nom & Prénom</th>
+                                            <th>Fin Contrat</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Rendered by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 2: Employees Directory -->
+                <section class="tab-panel" id="tab-employees">
+                    <div class="table-toolbar">
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-filter="all">Tous (0)</button>
+                            <button class="filter-btn" data-filter="actif">Actifs</button>
+                            <button class="filter-btn" data-filter="conge">En Congé</button>
+                            <button class="filter-btn" data-filter="maladie">Maladie</button>
+                            <button class="filter-btn" data-filter="archive">Archivés</button>
+                        </div>
+                        <div class="toolbar-actions">
+                            <button class="btn-secondary" id="export-emp-excel">
+                                <i class="fa-solid fa-file-excel"></i> Exporter Excel
+                            </button>
+                            <button class="btn-primary" id="add-emp-btn">
+                                <i class="fa-solid fa-plus"></i> Ajouter un Employé
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="data-table" id="table-employees">
+                                    <thead>
+                                        <tr>
+                                            <th>Matricule</th>
+                                            <th>Nom & Prénom</th>
+                                            <th>Fonction</th>
+                                            <th>Téléphone</th>
+                                            <th>Début Contrat</th>
+                                            <th>Durée</th>
+                                            <th>Statut RH</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic JS content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 3: Leaves Management -->
+                <section class="tab-panel" id="tab-leaves">
+                    <div class="grid-2col-layout">
+                        <!-- Left: Form -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-calendar-plus"></i> Saisir un Congé / Absence</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="leave-form">
+                                    <div class="form-group">
+                                        <label for="leave-emp-select">Employé <span class="required">*</span></label>
+                                        <select id="leave-emp-select" required class="form-control">
+                                            <!-- Dynamic JS -->
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="leave-type-select">Type de Congé / Absence <span class="required">*</span></label>
+                                        <select id="leave-type-select" required class="form-control">
+                                            <option value="Congé Annuel">Congé Annuel</option>
+                                            <option value="Maladie">Maladie / Accident</option>
+                                            <option value="Événement Familial">Événement Familial</option>
+                                            <option value="Sans Solde">Congé Sans Solde</option>
+                                            <option value="Absence Injustifiée">Absence Injustifiée</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="leave-start-date">Date Début <span class="required">*</span></label>
+                                            <input type="date" id="leave-start-date" required class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="leave-days">Nombre de Jours <span class="required">*</span></label>
+                                            <input type="number" id="leave-days" min="1" value="1" required class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="leave-end-date">Date Fin (Calculée)</label>
+                                        <input type="text" id="leave-end-date" readonly class="form-control readonly">
+                                    </div>
+                                    <button type="submit" class="btn-primary btn-block">
+                                        <i class="fa-solid fa-floppy-disk"></i> Enregistrer le Congé
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Right: Leaves Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-list-check"></i> Historique des Congés</h3>
+                                <button class="btn-secondary btn-sm" id="export-leaves-csv">
+                                    <i class="fa-solid fa-download"></i> Exporter CSV
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="table-leaves-history">
+                                        <thead>
+                                            <tr>
+                                                <th>Matricule</th>
+                                                <th>Employé</th>
+                                                <th>Type</th>
+                                                <th>Début</th>
+                                                <th>Fin</th>
+                                                <th>Jours</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Dynamic JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 4: Analytics -->
+                <section class="tab-panel" id="tab-analytics">
+                    <div class="charts-grid-2x2">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-chart-column"></i> Répartition des Contrats</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chart-contracts-bar"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-chart-line"></i> Retards, Absences & Sanctions</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chart-absences-line"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 5: Finance & Paie -->
+                <section class="tab-panel" id="tab-finance">
+                    <div class="grid-2col-layout">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-calculator"></i> Calculateur de Paie (Algérie)</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="payroll-form">
+                                    <div class="form-group">
+                                        <label for="pay-emp-select">Sélectionner Employé</label>
+                                        <select id="pay-emp-select" class="form-control"></select>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Salaire de Base (DZD)</label>
+                                            <input type="number" id="pay-base" value="50000" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Prime Transport (DZD)</label>
+                                            <input type="number" id="pay-trans" value="5000" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Indemnité Panier (DZD)</label>
+                                            <input type="number" id="pay-panier" value="4000" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Retenue CNAS (9%)</label>
+                                            <input type="text" id="pay-cnas" readonly class="form-control readonly">
+                                        </div>
+                                    </div>
+                                    <div class="payroll-result-box">
+                                        <span>Salaire Net à Payer :</span>
+                                        <h2 id="pay-net-result">0.00 DZD</h2>
+                                    </div>
+                                    <button type="button" id="generate-payslip-btn" class="btn-success btn-block">
+                                        <i class="fa-solid fa-file-pdf"></i> Générer Fiche de Paie
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Right: Payroll Summary Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-money-bill-wave"></i> Tableau Récapitulatif des Salaires</h3>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="data-table" id="table-payroll-summary">
+                                    <thead>
+                                        <tr>
+                                            <th>Matricule</th>
+                                            <th>Employé</th>
+                                            <th>Poste</th>
+                                            <th>Base (DZD)</th>
+                                            <th>Net Est. (DZD)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- JS dynamic -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 6: WhatsApp / SMS -->
+                <section class="tab-panel" id="tab-whatsapp">
+                    <div class="card max-w-700">
+                        <div class="card-header">
+                            <h3><i class="fa-brands fa-whatsapp"></i> Envoi de Notifications WhatsApp / SMS</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="wa-emp-select">Destinataire</label>
+                                <select id="wa-emp-select" class="form-control"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="wa-template-select">Modèle de Message</label>
+                                <select id="wa-template-select" class="form-control">
+                                    <option value="conge">Approbation de Congé</option>
+                                    <option value="paie">Notification Fiche de Paie</option>
+                                    <option value="convocation">Convocation / Réunion RH</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="wa-message-text">Message</label>
+                                <textarea id="wa-message-text" rows="5" class="form-control"></textarea>
+                            </div>
+                            <button id="send-wa-btn" class="btn-success btn-block">
+                                <i class="fa-brands fa-whatsapp"></i> Ouvrir dans WhatsApp Web
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab 7: Outlook -->
+                <section class="tab-panel" id="tab-outlook">
+                    <div class="card max-w-700">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-envelope-open-text"></i> Intégration Microsoft Outlook</h3>
+                            <span class="badge-status online"><i class="fa-solid fa-circle"></i> Service Actif</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="outlook-status-card">
+                                <i class="fa-solid fa-cloud-check"></i>
+                                <div>
+                                    <h4>Connecteur Outlook MAPI Prêt</h4>
+                                    <p>Permet l'envoi automatisé des convocations et bulletins de paie par email.</p>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Sujet de l'Email</label>
+                                <input type="text" id="outlook-subject" value="RH Manager - Notification Officielle" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Contenu</label>
+                                <textarea id="outlook-body" rows="4" class="form-control">Bonjour, veuillez trouver ci-joint votre document RH officiel.</textarea>
+                            </div>
+                            <button id="send-outlook-btn" class="btn-primary btn-block">
+                                <i class="fa-solid fa-paper-plane"></i> Simuler Envoi Outlook
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Employee Form (Add/Edit) -->
+    <div class="modal-overlay" id="modal-employee">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-emp-title"><i class="fa-solid fa-user-plus"></i> Ajouter un Employé</h3>
+                <button class="modal-close" id="modal-emp-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="employee-modal-form">
+                    <input type="hidden" id="emp-edit-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="emp-mat">Matricule <span class="required">*</span></label>
+                            <input type="text" id="emp-mat" required class="form-control" placeholder="ex: 101">
+                        </div>
+                        <div class="form-group">
+                            <label for="emp-name">Nom & Prénom <span class="required">*</span></label>
+                            <input type="text" id="emp-name" required class="form-control" placeholder="ex: Karim Benali">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="emp-role">Fonction / Poste <span class="required">*</span></label>
+                            <input type="text" id="emp-role" required class="form-control" placeholder="ex: Ingénieur Informatique">
+                        </div>
+                        <div class="form-group">
+                            <label for="emp-phone">Téléphone</label>
+                            <input type="text" id="emp-phone" class="form-control" placeholder="ex: 0550123456">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="emp-start-date">Début de Contrat</label>
+                            <input type="date" id="emp-start-date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="emp-duration">Durée de Contrat</label>
+                            <select id="emp-duration" class="form-control">
+                                <option value="CDI">CDI (Indéterminée)</option>
+                                <option value="6 mois">6 mois (CDD)</option>
+                                <option value="1 an">1 an (CDD)</option>
+                                <option value="3 mois">3 mois (Essai)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" id="modal-emp-cancel">Annuler</button>
+                        <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Payslip Preview -->
+    <div class="modal-overlay" id="modal-payslip">
+        <div class="modal-container modal-lg">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-invoice"></i> Bulletin de Paye Officiel</h3>
+                <button class="modal-close" id="modal-payslip-close">&times;</button>
+            </div>
+            <div class="modal-body" id="payslip-print-content">
+                <!-- Generated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modal-payslip-close-btn">Fermer</button>
+                <button class="btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimer / PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Script JS -->
+    <script src="app.js"></script>
+</body>
+</html>
