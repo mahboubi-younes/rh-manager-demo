@@ -356,6 +356,86 @@ body {
     animation: fadeIn 0.25s ease;
 }
 
+/* Search Keyboard Shortcut Badge */
+.search-shortcut {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    margin-left: 6px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+}
+
+/* ZKTeco Status Bar */
+.zk-status-bar {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #ffffff;
+    padding: 16px 24px;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: var(--shadow-md);
+}
+
+.zk-device-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.zk-pulse-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+    70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.zk-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.badge-count.live {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Logo Preview Box */
+.logo-preview-container {
+    margin-top: 10px;
+    padding: 15px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    text-align: center;
+    background: #f8fafc;
+}
+
+.logo-preview-img {
+    max-height: 70px;
+    max-width: 200px;
+    object-fit: contain;
+}
+
 /* Tab Panels */
 .tab-panel {
     display: none;

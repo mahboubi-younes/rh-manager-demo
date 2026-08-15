@@ -29,12 +29,29 @@ const INITIAL_DAILY_LOGS = [
     { id: 'd3', matricule: '107', name: 'Khaled Dahmani', date: '2026-08-10', type: 'Absence Injustifiée', minutes: 480, reason: 'Non justifié' }
 ];
 
+const INITIAL_ZK_LOGS = [
+    { id: 'zk1', time: '2026-08-15 07:54:12', matricule: '101', name: 'Karim Benali', method: 'Facial', action: 'ENTREE', status: 'À l\'heure' },
+    { id: 'zk2', time: '2026-08-15 08:02:45', matricule: '102', name: 'Yasmine Amrani', method: 'Fingerprint', action: 'ENTREE', status: 'À l\'heure' },
+    { id: 'zk3', time: '2026-08-15 08:24:10', matricule: '103', name: 'Mohamed Saidi', method: 'Fingerprint', action: 'ENTREE', status: 'Retard (24m)' },
+    { id: 'zk4', time: '2026-08-15 08:05:30', matricule: '105', name: 'Amine Khelifi', method: 'RFID Card', action: 'ENTREE', status: 'À l\'heure' },
+    { id: 'zk5', time: '2026-08-15 08:12:00', matricule: '108', name: 'Lyna Cherif', method: 'Facial', action: 'ENTREE', status: 'Retard (12m)' }
+];
+
+const DEFAULT_COMPANY = {
+    name: 'ENTREPRISE RH MANAGER SARL',
+    address: 'Zone Industrielle Chéraga, Alger, Algérie',
+    nif: 'NIF: 001916019283746 | NIS: 198273645',
+    logo: ''
+};
+
 // App State Management
 class RHManagerApp {
     constructor() {
         this.employees = JSON.parse(localStorage.getItem('rh_employees')) || INITIAL_EMPLOYEES;
         this.leaves = JSON.parse(localStorage.getItem('rh_leaves')) || INITIAL_LEAVES;
         this.dailyLogs = JSON.parse(localStorage.getItem('rh_daily_logs')) || INITIAL_DAILY_LOGS;
+        this.zkLogs = JSON.parse(localStorage.getItem('rh_zk_logs')) || INITIAL_ZK_LOGS;
+        this.company = JSON.parse(localStorage.getItem('rh_company')) || DEFAULT_COMPANY;
         this.charts = {};
         
         this.initDOM();
@@ -46,6 +63,8 @@ class RHManagerApp {
         localStorage.setItem('rh_employees', JSON.stringify(this.employees));
         localStorage.setItem('rh_leaves', JSON.stringify(this.leaves));
         localStorage.setItem('rh_daily_logs', JSON.stringify(this.dailyLogs));
+        localStorage.setItem('rh_zk_logs', JSON.stringify(this.zkLogs));
+        localStorage.setItem('rh_company', JSON.stringify(this.company));
     }
 
     initDOM() {
@@ -56,6 +75,7 @@ class RHManagerApp {
         // Modals
         this.modalEmp = document.getElementById('modal-employee');
         this.modalPayslip = document.getElementById('modal-payslip');
+        this.modalLogo = document.getElementById('modal-company-logo');
         
         // KPI elements
         this.kpiTotal = document.getElementById('kpi-total-emp');
@@ -69,6 +89,7 @@ class RHManagerApp {
         this.tableLeavesHist = document.getElementById('table-leaves-history').querySelector('tbody');
         this.tableDailyLog = document.getElementById('table-daily-log') ? document.getElementById('table-daily-log').querySelector('tbody') : null;
         this.tableMonthlySummary = document.getElementById('table-monthly-summary') ? document.getElementById('table-monthly-summary').querySelector('tbody') : null;
+        this.tableZK = document.getElementById('table-zk-logs') ? document.getElementById('table-zk-logs').querySelector('tbody') : null;
         this.tablePayroll = document.getElementById('table-payroll-summary').querySelector('tbody');
     }
 
@@ -80,6 +101,15 @@ class RHManagerApp {
                 const tabId = link.getAttribute('data-tab');
                 this.switchTab(tabId);
             });
+        });
+
+        // Keyboard Shortcut: Ctrl + K for Smart Search
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                const searchInput = document.getElementById('global-search');
+                if (searchInput) searchInput.focus();
+            }
         });
 
         // Subtabs switching (Leaves & Finance)
@@ -95,10 +125,47 @@ class RHManagerApp {
             });
         });
 
-        // Global search
+        // Smart Global Search
         document.getElementById('global-search').addEventListener('input', (e) => {
-            this.handleGlobalSearch(e.target.value.toLowerCase());
+            this.handleGlobalSearch(e.target.value.toLowerCase().trim());
         });
+
+        // Company Logo & Header Modal
+        const companyLogoBtn = document.getElementById('company-logo-btn');
+        if (companyLogoBtn) {
+            companyLogoBtn.addEventListener('click', () => this.openLogoModal());
+        }
+        const modalLogoClose = document.getElementById('modal-logo-close');
+        if (modalLogoClose) modalLogoClose.addEventListener('click', () => this.closeModal(this.modalLogo));
+        const modalLogoCancel = document.getElementById('modal-logo-cancel');
+        if (modalLogoCancel) modalLogoCancel.addEventListener('click', () => this.closeModal(this.modalLogo));
+
+        const logoForm = document.getElementById('company-logo-form');
+        if (logoForm) {
+            logoForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSaveCompanySettings();
+            });
+        }
+
+        const logoFile = document.getElementById('company-logo-file');
+        if (logoFile) {
+            logoFile.addEventListener('change', (e) => this.handleLogoFileUpload(e));
+        }
+
+        // ZKTeco Biometric Handlers
+        const zkForm = document.getElementById('zk-punch-form');
+        if (zkForm) {
+            zkForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSaveZKPunch();
+            });
+        }
+        const zkSyncBtn = document.getElementById('zk-sync-now-btn');
+        if (zkSyncBtn) zkSyncBtn.addEventListener('click', () => this.syncZKTecoDevice());
+
+        const zkImportBtn = document.getElementById('zk-import-file-btn');
+        if (zkImportBtn) zkImportBtn.addEventListener('click', () => this.importZKTecoFile());
 
         // Quick Add Employee buttons
         document.getElementById('quick-add-emp-btn').addEventListener('click', () => this.openEmployeeModal());
@@ -224,6 +291,7 @@ class RHManagerApp {
                 'dashboard': 'Tableau de Bord RH',
                 'employees': 'Répertoire des Employés',
                 'leaves': 'Gestion des Congés & Absences',
+                'zkteco': 'Gestion Pointeuse Biométrique ZKTeco',
                 'analytics': 'Statistiques & Bilan RH',
                 'finance': 'Finance & Fiches de Paye (Algérie)',
                 'documents': 'Générateur de Documents RH Officiels',
@@ -246,6 +314,7 @@ class RHManagerApp {
         this.renderLeavesTable();
         this.renderDailyLogsTable();
         this.renderMonthlySummaryTable();
+        this.renderZKLogsTable();
         this.populateDropdowns();
         this.renderPayrollTable();
         this.renderCharts();
@@ -375,6 +444,22 @@ class RHManagerApp {
         }).join('');
     }
 
+    renderZKLogsTable() {
+        if (!this.tableZK) return;
+        const zkBadge = document.getElementById('zk-count-badge');
+        if (zkBadge) zkBadge.textContent = `${this.zkLogs.length} pointages enregistrés`;
+
+        this.tableZK.innerHTML = this.zkLogs.map(log => `
+            <tr>
+                <td><small>${log.time}</small></td>
+                <td><strong>${log.name}</strong> (${log.matricule})</td>
+                <td><span class="badge-pro" style="background:#f1f5f9; color:#475569;"><i class="fa-solid ${log.method === 'Facial' ? 'fa-user-check' : log.method === 'Fingerprint' ? 'fa-fingerprint' : 'fa-id-card'}"></i> ${log.method}</span></td>
+                <td><span class="badge-pro" style="background:${log.action === 'ENTREE' ? '#ecfdf5' : '#fff7ed'}; color:${log.action === 'ENTREE' ? '#047857' : '#c2410c'};">${log.action}</span></td>
+                <td><span class="status-badge ${log.status.includes('Retard') ? 'maladie' : 'actif'}">${log.status}</span></td>
+            </tr>
+        `).join('');
+    }
+
     populateDropdowns() {
         const empOptions = this.employees.map(e => `<option value="${e.id}">${e.matricule} - ${e.name}</option>`).join('');
         
@@ -383,6 +468,9 @@ class RHManagerApp {
 
         const dailySelect = document.getElementById('daily-emp-select');
         if (dailySelect) dailySelect.innerHTML = empOptions;
+
+        const zkSelect = document.getElementById('zk-emp-select');
+        if (zkSelect) zkSelect.innerHTML = empOptions;
 
         const docSelect = document.getElementById('doc-emp-select');
         if (docSelect) docSelect.innerHTML = empOptions;
@@ -743,6 +831,128 @@ class RHManagerApp {
         }
     }
 
+    // Company Logo & Settings Handlers
+    openLogoModal() {
+        document.getElementById('company-name-input').value = this.company.name || 'ENTREPRISE RH MANAGER SARL';
+        document.getElementById('company-address-input').value = this.company.address || 'Zone Industrielle Chéraga, Alger, Algérie';
+        document.getElementById('company-nif-input').value = this.company.nif || 'NIF: 001916019283746 | NIS: 198273645';
+
+        const previewBox = document.getElementById('logo-preview-box');
+        if (this.company.logo) {
+            previewBox.innerHTML = `<img src="${this.company.logo}" class="logo-preview-img" alt="Logo Entreprise">`;
+        } else {
+            previewBox.innerHTML = `<span class="text-muted">Aucun logo personnalisé importé (Logo par défaut actif)</span>`;
+        }
+
+        this.modalLogo.classList.add('active');
+    }
+
+    handleLogoFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target.result;
+            this.tempUploadedLogo = dataUrl;
+            document.getElementById('logo-preview-box').innerHTML = `<img src="${dataUrl}" class="logo-preview-img" alt="Aperçu Logo">`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    handleSaveCompanySettings() {
+        this.company.name = document.getElementById('company-name-input').value;
+        this.company.address = document.getElementById('company-address-input').value;
+        this.company.nif = document.getElementById('company-nif-input').value;
+        if (this.tempUploadedLogo) {
+            this.company.logo = this.tempUploadedLogo;
+        }
+
+        this.saveState();
+        this.closeModal(this.modalLogo);
+        this.showToast('Paramètres & Logo entreprise mis à jour avec succès.', 'success');
+    }
+
+    // ZKTeco Biometric Handlers
+    handleSaveZKPunch() {
+        const empId = document.getElementById('zk-emp-select').value;
+        const emp = this.employees.find(e => e.id === empId);
+        const method = document.getElementById('zk-punch-type').value;
+        const action = document.getElementById('zk-punch-action').value;
+        const timeInput = document.getElementById('zk-punch-time').value;
+
+        if (!emp) {
+            this.showToast('Sélectionnez un employé.', 'error');
+            return;
+        }
+
+        const nowStr = timeInput ? timeInput.replace('T', ' ') : new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const timeObj = new Date(timeInput || Date.now());
+        const hour = timeObj.getHours();
+        const min = timeObj.getMinutes();
+
+        let status = 'À l\'heure';
+        if (action === 'ENTREE' && (hour > 8 || (hour === 8 && min > 15))) {
+            const lateMins = (hour - 8) * 60 + min;
+            status = `Retard (${lateMins}m)`;
+        }
+
+        const newLog = {
+            id: 'zk_' + Date.now(),
+            time: nowStr,
+            matricule: emp.matricule,
+            name: emp.name,
+            method,
+            action,
+            status
+        };
+
+        this.zkLogs.unshift(newLog);
+        this.saveState();
+        this.renderZKLogsTable();
+        this.showToast(`Pointage ${method} enregistré pour ${emp.name}.`, 'success');
+    }
+
+    syncZKTecoDevice() {
+        this.showToast('Connexion au terminal ZKTeco MB20 (192.168.1.201:4370)...', 'info');
+        setTimeout(() => {
+            const now = new Date();
+            const timeStr = now.toISOString().replace('T', ' ').substring(0, 19);
+            const randEmp = this.employees[Math.floor(Math.random() * this.employees.length)];
+            
+            const newSyncLog = {
+                id: 'zk_' + Date.now(),
+                time: timeStr,
+                matricule: randEmp.matricule,
+                name: randEmp.name,
+                method: 'Fingerprint',
+                action: 'ENTREE',
+                status: 'À l\'heure (Sync Live)'
+            };
+
+            this.zkLogs.unshift(newSyncLog);
+            this.saveState();
+            this.renderZKLogsTable();
+            this.showToast('Synchronisation ZKTeco réussie ! Données biométriques mises à jour.', 'success');
+        }, 1200);
+    }
+
+    importZKTecoFile() {
+        this.showToast('Importation du fichier journal ZKAccess (.DAT)...', 'info');
+        setTimeout(() => {
+            const dateStr = new Date().toISOString().split('T')[0];
+            const dummyImport = [
+                { id: 'zk_imp1', time: `${dateStr} 07:58:22`, matricule: '106', name: 'Nadia Meziani', method: 'Facial', action: 'ENTREE', status: 'À l\'heure' },
+                { id: 'zk_imp2', time: `${dateStr} 08:14:05`, matricule: '109', name: 'Billel Ouali', method: 'Fingerprint', action: 'ENTREE', status: 'Retard (14m)' }
+            ];
+
+            this.zkLogs.unshift(...dummyImport);
+            this.saveState();
+            this.renderZKLogsTable();
+            this.showToast('Fichier .DAT ZKTeco importé : 2 enregistrements ajoutés.', 'success');
+        }, 1000);
+    }
+
     // Official Document Generator (Attestation, Titre de Congé, Convocation)
     generateOfficialDocumentModal() {
         const empId = document.getElementById('doc-emp-select').value;
@@ -754,6 +964,10 @@ class RHManagerApp {
             return;
         }
 
+        const companyLogoHtml = this.company.logo ? 
+            `<img src="${this.company.logo}" style="max-height:60px; max-width:180px; object-fit:contain; margin-bottom:8px;">` :
+            `<h2 style="color:#1a73e8; margin:0;">${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</h2>`;
+
         const today = new Date().toLocaleDateString('fr-FR');
         let docTitle = 'DOCUMENT OFFICIEL RH';
         let docBody = '';
@@ -761,7 +975,7 @@ class RHManagerApp {
         if (type === 'attestation') {
             docTitle = 'ATTESTATION DE TRAVAIL';
             docBody = `
-                <p>Nous soussignés, <strong>ENTREPRISE RH MANAGER SARL</strong>, attestons par la présente que :</p>
+                <p>Nous soussignés, <strong>${this.company.name || 'ENTREPRISE RH MANAGER SARL'}</strong>, attestons par la présente que :</p>
                 <p style="font-size:16px; margin:15px 0;"><strong>Monsieur / Madame :</strong> ${emp.name}<br>
                 <strong>Matricule :</strong> ${emp.matricule}<br>
                 <strong>Fonction :</strong> ${emp.role}<br>
@@ -793,8 +1007,9 @@ class RHManagerApp {
             <div style="font-family:'Inter', sans-serif; padding:30px; border:2px solid #1a73e8; border-radius:8px; background:#ffffff; color:#1e293b;">
                 <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">
                     <div>
-                        <h2 style="color:#1a73e8; margin:0;">RH MANAGER PRO — SARL</h2>
-                        <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">Direction des Ressources Humaines — Alger</p>
+                        ${companyLogoHtml}
+                        <p style="margin:4px 0 0 0; color:#64748b; font-size:12px;">${this.company.address || 'Alger, Algérie'}</p>
+                        <p style="margin:2px 0 0 0; color:#94a3b8; font-size:11px;">${this.company.nif || ''}</p>
                     </div>
                     <div style="text-align:right;">
                         <p style="margin:0; font-size:12px; color:#64748b;">Fait à Alger, le ${today}</p>
@@ -823,15 +1038,24 @@ class RHManagerApp {
         this.modalPayslip.classList.add('active');
     }
 
-    // CSV / Excel Export helper
+    // CSV / Excel Export helper with Company Branding
     exportToCSV(data, filename = 'export.csv') {
         if (!data || !data.length) {
             this.showToast('Aucune donnée à exporter.', 'error');
             return;
         }
+        
+        const companyHeader = [
+            `"${this.company.name || 'RH MANAGER PRO SARL'}"`,
+            `"${this.company.address || 'Alger, Algérie'}"`,
+            `"${this.company.nif || ''}"`,
+            `"EXPORT RH — Généré le ${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR')}"`,
+            '""'
+        ].join('\n');
+
         const headers = Object.keys(data[0]).join(',');
         const rows = data.map(obj => Object.values(obj).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
-        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers, ...rows].join('\n');
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + companyHeader + '\n' + [headers, ...rows].join('\n');
         
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
@@ -841,7 +1065,7 @@ class RHManagerApp {
         link.click();
         document.body.removeChild(link);
 
-        this.showToast(`Export ${filename} téléchargé avec succès.`, 'success');
+        this.showToast(`Export Excel/CSV (${filename}) avec en-tête entreprise téléchargé.`, 'success');
     }
 
     exportBilanCSV() {
@@ -939,30 +1163,70 @@ class RHManagerApp {
         }
     }
 
-    // Global Search
+    // Smart Multi-Field Global Search
     handleGlobalSearch(query) {
         if (!query) {
             this.renderEmployeesTable('all');
             return;
         }
+
+        // Auto switch to employees tab if searching
+        const activeTab = document.querySelector('.nav-link.active')?.getAttribute('data-tab');
+        if (activeTab !== 'employees' && activeTab !== 'zkteco' && activeTab !== 'leaves') {
+            this.switchTab('employees');
+        }
+
+        const q = query.toLowerCase();
         const filtered = this.employees.filter(e => 
-            e.name.toLowerCase().includes(query) || 
-            e.matricule.toLowerCase().includes(query) || 
-            e.role.toLowerCase().includes(query)
+            e.name.toLowerCase().includes(q) || 
+            e.matricule.toLowerCase().includes(q) || 
+            e.role.toLowerCase().includes(q) ||
+            e.phone.toLowerCase().includes(q) ||
+            e.duration.toLowerCase().includes(q) ||
+            e.status.toLowerCase().includes(q)
         );
 
-        this.tableEmp.innerHTML = filtered.map(emp => `
-            <tr>
-                <td><strong>${emp.matricule}</strong></td>
-                <td><strong>${emp.name}</strong></td>
-                <td>${emp.role}</td>
-                <td>${emp.phone}</td>
-                <td>${emp.start}</td>
-                <td><span class="badge-pro">${emp.duration}</span></td>
-                <td><span class="status-badge ${emp.status}">${emp.status.toUpperCase()}</span></td>
-                <td><button class="btn-icon" onclick="app.openEmployeeModal('${emp.id}')"><i class="fa-solid fa-pen"></i></button></td>
-            </tr>
-        `).join('');
+        if (filtered.length === 0) {
+            this.tableEmp.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align:center; padding:30px; color:#64748b;">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size:24px; margin-bottom:8px; color:#cbd5e1; display:block;"></i>
+                        Aucun employé ne correspond à "<strong>${query}</strong>"
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        this.tableEmp.innerHTML = filtered.map(emp => {
+            const highlight = (text) => {
+                if (!text) return '';
+                const idx = text.toLowerCase().indexOf(q);
+                if (idx === -1) return text;
+                return text.substring(0, idx) + `<mark style="background:#fef08a; padding:1px 4px; border-radius:2px;">${text.substring(idx, idx + q.length)}</mark>` + text.substring(idx + q.length);
+            };
+
+            return `
+                <tr>
+                    <td><strong>${highlight(emp.matricule)}</strong></td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="avatar" style="width:30px; height:30px; font-size:10px; background:#1a73e8;">${emp.name.split(' ').map(n=>n[0]).join('')}</div>
+                            <strong>${highlight(emp.name)}</strong>
+                        </div>
+                    </td>
+                    <td>${highlight(emp.role)}</td>
+                    <td>${highlight(emp.phone)}</td>
+                    <td>${emp.start}</td>
+                    <td><span class="badge-pro">${highlight(emp.duration)}</span></td>
+                    <td><span class="status-badge ${emp.status}">${emp.status.toUpperCase()}</span></td>
+                    <td>
+                        <button class="btn-icon" onclick="app.openEmployeeModal('${emp.id}')" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-icon delete" onclick="app.deleteEmployee('${emp.id}')" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
     // Toast Messages

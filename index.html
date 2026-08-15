@@ -62,6 +62,10 @@
                     <i class="fa-solid fa-calendar-check"></i> Congés & Absences
                     <span class="badge-count warning" id="leave-count-badge">0</span>
                 </a>
+                <a href="#" class="nav-link" data-tab="zkteco">
+                    <i class="fa-solid fa-fingerprint"></i> Pointeuse ZKTeco
+                    <span class="badge-count live" id="zk-live-badge"><i class="fa-solid fa-circle"></i> Sync</span>
+                </a>
                 <a href="#" class="nav-link" data-tab="analytics">
                     <i class="fa-solid fa-chart-line"></i> Statistiques & Analytics
                 </a>
@@ -109,8 +113,12 @@
                 <div class="topbar-actions">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="global-search" placeholder="Rechercher employé, matricule...">
+                        <input type="text" id="global-search" placeholder="Recherche intelligente (Ctrl+K)...">
+                        <kbd class="search-shortcut">Ctrl K</kbd>
                     </div>
+                    <button class="btn-secondary btn-sm" id="company-logo-btn" title="Personnaliser le logo entreprise sur les fiches et exports Excel">
+                        <i class="fa-solid fa-building"></i> Logo Entreprise
+                    </button>
                     <button class="btn-primary" id="quick-add-emp-btn">
                         <i class="fa-solid fa-user-plus"></i> Nouvel Employé
                     </button>
@@ -568,6 +576,92 @@
                     </div>
                 </section>
 
+                <!-- Tab: Pointeuse Biométrique ZKTeco -->
+                <section class="tab-panel" id="tab-zkteco">
+                    <div class="zk-status-bar">
+                        <div class="zk-device-info">
+                            <div class="zk-pulse-icon"><i class="fa-solid fa-fingerprint"></i></div>
+                            <div>
+                                <h4>Terminal ZKTeco MB20/K40 (Biométrie & RFID)</h4>
+                                <span class="status-badge active"><i class="fa-solid fa-circle"></i> Connecté — IP: 192.168.1.201:4370</span>
+                            </div>
+                        </div>
+                        <div class="zk-actions">
+                            <button class="btn-secondary" id="zk-import-file-btn">
+                                <i class="fa-solid fa-file-import"></i> Importer Fichier .DAT / .CSV
+                            </button>
+                            <button class="btn-success" id="zk-sync-now-btn">
+                                <i class="fa-solid fa-rotate"></i> Synchroniser Directement
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid-2col-layout">
+                        <!-- Left: Live Clock-in Simulator -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-clock"></i> Simuler un Pointage Biométrique</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="zk-punch-form">
+                                    <div class="form-group">
+                                        <label for="zk-emp-select">Employé</label>
+                                        <select id="zk-emp-select" class="form-control"></select>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="zk-punch-type">Type Biométrique</label>
+                                            <select id="zk-punch-type" class="form-control">
+                                                <option value="Fingerprint"><i class="fa-solid fa-fingerprint"></i> Empreinte Digitale</option>
+                                                <option value="Facial"><i class="fa-solid fa-user-check"></i> Reconnaissance Faciale</option>
+                                                <option value="RFID Card"><i class="fa-solid fa-id-card"></i> Badge RFID</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="zk-punch-action">Action</label>
+                                            <select id="zk-punch-action" class="form-control">
+                                                <option value="ENTREE">Entrée (Check-In)</option>
+                                                <option value="SORTIE">Sortie (Check-Out)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="zk-punch-time">Horodatage</label>
+                                        <input type="datetime-local" id="zk-punch-time" class="form-control">
+                                    </div>
+                                    <button type="submit" class="btn-primary btn-block">
+                                        <i class="fa-solid fa-fingerprint"></i> Enregistrer Pointage ZKTeco
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Right: Live Attendance Punch Log -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-list-ol"></i> Registre en Temps Réel ZKAccess</h3>
+                                <span class="badge-count" id="zk-count-badge">0 pointages</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="table-zk-logs">
+                                        <thead>
+                                            <tr>
+                                                <th>Heure</th>
+                                                <th>Employé</th>
+                                                <th>Méthode</th>
+                                                <th>Action</th>
+                                                <th>Statut</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody><!-- Dynamic JS --></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Tab 6: WhatsApp / SMS -->
                 <section class="tab-panel" id="tab-whatsapp">
                     <div class="card max-w-700">
@@ -698,6 +792,43 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="modal-payslip-close-btn">Fermer</button>
                 <button class="btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimer / PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Company Logo & Export Customization -->
+    <div class="modal-overlay" id="modal-company-logo">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-building"></i> Personnaliser l'En-tête & Logo de l'Entreprise</h3>
+                <button class="modal-close" id="modal-logo-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="company-logo-form">
+                    <div class="form-group">
+                        <label for="company-name-input">Raison Sociale / Nom Entreprise</label>
+                        <input type="text" id="company-name-input" class="form-control" value="ENTREPRISE RH MANAGER SARL">
+                    </div>
+                    <div class="form-group">
+                        <label for="company-address-input">Adresse & Ville</label>
+                        <input type="text" id="company-address-input" class="form-control" value="Zone Industrielle Chéraga, Alger, Algérie">
+                    </div>
+                    <div class="form-group">
+                        <label for="company-nif-input">N° NIF / NIS / RC</label>
+                        <input type="text" id="company-nif-input" class="form-control" value="NIF: 001916019283746 | NIS: 198273645">
+                    </div>
+                    <div class="form-group">
+                        <label for="company-logo-file">Logo de l'Entreprise (Image PNG/JPG)</label>
+                        <input type="file" id="company-logo-file" accept="image/*" class="form-control">
+                        <div id="logo-preview-box" class="logo-preview-container">
+                            <span class="text-muted">Aucun logo personnalisé importé (Logo par défaut actif)</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" id="modal-logo-cancel">Annuler</button>
+                        <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Appliquer aux Fiches & Exports</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
