@@ -349,7 +349,8 @@ class RHManagerApp {
                 'documents': 'Générateur de Documents RH & Papers Administrative',
                 'settings': 'Configuration de l\'Entreprise & Logo',
                 'whatsapp': 'Centre de Notifications WhatsApp',
-                'outlook': 'Intégration Microsoft Outlook'
+                'outlook': 'Intégration Microsoft Outlook',
+                'about': 'Rapport Officiel & Présentation RH'
             };
             document.getElementById('page-title').textContent = titles[tabId] || 'RH Manager';
             
@@ -358,6 +359,23 @@ class RHManagerApp {
                 setTimeout(() => this.renderCharts(), 100);
             }
         }
+    }
+
+    switchAboutLang(lang) {
+        ['fr', 'en', 'ar'].forEach(l => {
+            const panel = document.getElementById(`about-lang-${l}`);
+            const btn = document.getElementById(`lang-btn-${l}`);
+            if (panel) panel.style.display = (l === lang) ? 'block' : 'none';
+            if (btn) {
+                if (l === lang) {
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-primary', 'active');
+                } else {
+                    btn.classList.remove('btn-primary', 'active');
+                    btn.classList.add('btn-secondary');
+                }
+            }
+        });
     }
 
     renderAll() {

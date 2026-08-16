@@ -81,8 +81,8 @@
                 <a href="#" class="nav-link" data-tab="whatsapp">
                     <i class="fa-brands fa-whatsapp"></i> WhatsApp / SMS
                 </a>
-                <a href="#" class="nav-link" data-tab="outlook">
-                    <i class="fa-solid fa-envelope"></i> Microsoft Outlook
+                <a href="#" class="nav-link" data-tab="about">
+                    <i class="fa-solid fa-award"></i> Rapport & Présentation RH
                 </a>
             </nav>
 
@@ -119,6 +119,9 @@
                         <input type="text" id="global-search" placeholder="Recherche intelligente (Ctrl+K)...">
                         <kbd class="search-shortcut">Ctrl K</kbd>
                     </div>
+                    <button class="btn-secondary btn-sm" id="report-tab-btn" onclick="if(window.app) window.app.switchTab('about')" title="Lire le rapport d'audit et la présentation produit">
+                        <i class="fa-solid fa-award"></i> Rapport & Présentation
+                    </button>
                     <button class="btn-secondary btn-sm" id="company-logo-btn" title="Personnaliser le logo entreprise sur les fiches et exports Excel">
                         <i class="fa-solid fa-building"></i> Logo Entreprise
                     </button>
@@ -822,6 +825,127 @@
                             <button id="send-outlook-btn" class="btn-primary btn-block">
                                 <i class="fa-solid fa-paper-plane"></i> Simuler Envoi Outlook
                             </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab: Multilingual Executive Audit & Presentation Report -->
+                <section class="tab-panel" id="tab-about">
+                    <div class="card mb-4">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <h3><i class="fa-solid fa-award"></i> Présentation Officielle & Vision RH Manager Pro</h3>
+                            <div class="lang-switch-buttons" style="display:flex; gap:8px;">
+                                <button type="button" class="btn-primary btn-sm lang-btn active" id="lang-btn-fr" onclick="if(window.app) window.app.switchAboutLang('fr')">
+                                    🇫🇷 Français
+                                </button>
+                                <button type="button" class="btn-secondary btn-sm lang-btn" id="lang-btn-en" onclick="if(window.app) window.app.switchAboutLang('en')">
+                                    🇬🇧 English
+                                </button>
+                                <button type="button" class="btn-secondary btn-sm lang-btn" id="lang-btn-ar" onclick="if(window.app) window.app.switchAboutLang('ar')">
+                                    🇩🇿 العربية
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- French Content -->
+                            <div id="about-lang-fr" class="about-lang-panel">
+                                <div style="background:#f8fafc; border-left:4px solid #1e40af; padding:16px; border-radius:4px; margin-bottom:20px;">
+                                    <h4 style="margin:0 0 8px 0; color:#0f172a;"><i class="fa-solid fa-star"></i> Solution ERP RH Haute Performance Conçue pour le Marché Algérien</h4>
+                                    <p style="margin:0; color:#475569; font-size:14px; line-height:1.6;">
+                                        <strong>RH Manager Pro</strong> réinvente la gestion administrative et le suivi des ressources humaines. Contrairement aux ERP génériques internationaux (Odoo, SAP) qui nécessitent des mois de configuration complexe, RH Manager Pro offre une réponse immédiate et sur-mesure aux exigences de la réglementation algérienne (Loi 90-11, spécificités CNAS, IRG, PC Paie).
+                                    </p>
+                                </div>
+
+                                <div class="grid-2col" style="gap:20px; margin-bottom:20px;">
+                                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                                        <h5 style="color:#1e40af; margin-top:0;"><i class="fa-solid fa-file-contract"></i> 1. Documents RH A4 Officiels Prêts à l'Emploi</h5>
+                                        <ul style="margin:0; padding-left:20px; color:#334155; font-size:13px; line-height:1.8;">
+                                            <li><strong>Ordres de Mission Officiels</strong> avec détails du véhicule, destination et objet.</li>
+                                            <li><strong>Demandes de Congé Réglementaires</strong> intégrées au barème annuel.</li>
+                                            <li><strong>Attestations & Certificats de Travail</strong> imprimables immédiatement aux normes A4.</li>
+                                            <li><strong>Décisions d'Embauche</strong> et Titres de Congé Payé.</li>
+                                        </ul>
+                                    </div>
+                                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                                        <h5 style="color:#059669; margin-top:0;"><i class="fa-solid fa-calculator"></i> 2. Synergie PC Paie & Pointage ZKTeco</h5>
+                                        <ul style="margin:0; padding-left:20px; color:#334155; font-size:13px; line-height:1.8;">
+                                            <li><strong>Intégration PC Paie / DlgNet</strong> : Archivage et distribution automatisée des bulletins.</li>
+                                            <li><strong>Pointeuse biométrique ZKTeco</strong> : Suivi en direct du temps de présence et des anomalies.</li>
+                                            <li><strong>Distribution Multicanale</strong> : Envoi immédiat des documents et bulletins via WhatsApp & Outlook.</li>
+                                            <li><strong>Config. Entreprise & Logo</strong> : En-tête unique mis à jour automatiquement sur tous les documents.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:16px; border-radius:8px;">
+                                    <h5 style="margin:0 0 6px 0; color:#1e40af;"><i class="fa-solid fa-shield-halved"></i> Note de Déploiement & Sécurité</h5>
+                                    <p style="margin:0; font-size:13px; color:#1e3a8a; line-height:1.6;">
+                                        Cette version démonstrateur Web s'exécute intégralement côté client sans dépendance serveur. La version professionnelle commerciale (.EXE) est livrée avec un moteur SQL performant, un démon ZKTeco UDP Live et la base de données SQLite isolée sur votre infrastructure entreprise.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- English Content -->
+                            <div id="about-lang-en" class="about-lang-panel" style="display:none;">
+                                <div style="background:#f8fafc; border-left:4px solid #059669; padding:16px; border-radius:4px; margin-bottom:20px;">
+                                    <h4 style="margin:0 0 8px 0; color:#0f172a;"><i class="fa-solid fa-star"></i> High-Performance HR ERP Tailored for Enterprise Administration</h4>
+                                    <p style="margin:0; color:#475569; font-size:14px; line-height:1.6;">
+                                        <strong>RH Manager Pro</strong> delivers an intuitive, fast, and administrative-ready experience for Human Resource management. Built specifically to tackle North African labor regulations, biometric attendance tracking, and official paper generation out of the box.
+                                    </p>
+                                </div>
+
+                                <div class="grid-2col" style="gap:20px; margin-bottom:20px;">
+                                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                                        <h5 style="color:#059669; margin-top:0;"><i class="fa-solid fa-file-contract"></i> 1. Official A4 Printable Documents</h5>
+                                        <ul style="margin:0; padding-left:20px; color:#334155; font-size:13px; line-height:1.8;">
+                                            <li><strong>Official Mission Orders</strong> (Ordre de Mission) with transport & motive details.</li>
+                                            <li><strong>Regulatory Leave Requests</strong> with hierarchy approval grid.</li>
+                                            <li><strong>Work Certificates & Employment Attestations</strong> ready for A4 printing.</li>
+                                            <li><strong>Recruitment Decisions</strong> & Paid Leave Vouchers.</li>
+                                        </ul>
+                                    </div>
+                                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                                        <h5 style="color:#1e40af; margin-top:0;"><i class="fa-solid fa-network-wired"></i> 2. Biometric & Payroll Software Integration</h5>
+                                        <ul style="margin:0; padding-left:20px; color:#334155; font-size:13px; line-height:1.8;">
+                                            <li><strong>PC Paie / DlgNet Bridge</strong>: Instant payslip archiving and employee dispatching.</li>
+                                            <li><strong>ZKTeco Biometric Clocking</strong>: Real-time attendance monitoring and anomaly detection.</li>
+                                            <li><strong>Multi-Channel Messaging</strong>: WhatsApp Business API & Outlook integration.</li>
+                                            <li><strong>Centralized Branding</strong>: Single-stop company logo and header propagation.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Arabic Content -->
+                            <div id="about-lang-ar" class="about-lang-panel" style="display:none; direction:rtl; text-align:right;">
+                                <div style="background:#f8fafc; border-right:4px solid #059669; padding:16px; border-radius:4px; margin-bottom:20px;">
+                                    <h4 style="margin:0 0 8px 0; color:#0f172a;"><i class="fa-solid fa-star"></i> النظام الاحترافي المتكامل لتسيير الموارد البشرية والوثائق الإدارية</h4>
+                                    <p style="margin:0; color:#475569; font-size:14px; line-height:1.7;">
+                                        تم تطوير <strong>RH Manager Pro</strong> ليلبي بدقة التزامات ومتطلبات الإدارات والشركات في الجزائر وشمال أفريقيا. يوفر النظام حلولاً فورية لتوليد الوثائق الرسمية، تتبع الحضور عبر بصمة ZKTeco، وأرشفة كشوف الراتب مع الأتمتة الكاملة وفق قانون العمل 90-11.
+                                    </p>
+                                </div>
+
+                                <div class="grid-2col" style="gap:20px; margin-bottom:20px;">
+                                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                                        <h5 style="color:#059669; margin-top:0;"><i class="fa-solid fa-file-contract"></i> 1. استخراج الوثائق الإدارية الرسمية (A4)</h5>
+                                        <ul style="margin:0; padding-right:20px; color:#334155; font-size:13px; line-height:1.9;">
+                                            <li><strong>أوامر المهمة الرسمية (Ordre de Mission)</strong> مع تفاصيل التنقل والمركبة.</li>
+                                            <li><strong>طلبات العطل السنوية والتراخيص</strong> الرسمية.</li>
+                                            <li><strong>شهادات العمل ومقررات التوظيف</strong> الجاهزة للطباعة الفورية.</li>
+                                            <li><strong>إشعارات واستدعاءات الموارد البشرية</strong> المحينة.</li>
+                                        </ul>
+                                    </div>
+                                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:18px;">
+                                        <h5 style="color:#1e40af; margin-top:0;"><i class="fa-solid fa-calculator"></i> 2. التكامل مع PC Paie وأجهزة البصمة</h5>
+                                        <ul style="margin:0; padding-right:20px; color:#334155; font-size:13px; line-height:1.9;">
+                                            <li><strong>التوافق مع برنامج PC Paie / DlgNet</strong> لأرشفة وإرسال كشوف الأجور.</li>
+                                            <li><strong>ربط مباشر مع جهاز البصمة ZKTeco</strong> لتتبع الحضور والغيابات.</li>
+                                            <li><strong>الإرسال الآلي المباشر</strong> عبر WhatsApp و Microsoft Outlook.</li>
+                                            <li><strong>شعار ورأسية موحدة</strong> تغذي جميع الوثائق والملفات المصدّرة تلقائياً.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
