@@ -137,6 +137,14 @@ class RHManagerApp {
             });
         });
 
+        // Employee Filter Buttons (All, Actifs, En Congé, Maladie, Archivés)
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.getAttribute('data-filter');
+                this.filterEmployees(filter);
+            });
+        });
+
         // Smart Global Search & Ctrl+K Keyboard Shortcut
         const globalSearchInput = document.getElementById('global-search');
         if (globalSearchInput) {
@@ -144,16 +152,6 @@ class RHManagerApp {
                 this.handleGlobalSearch(e.target.value.toLowerCase().trim());
             });
         }
-
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                e.preventDefault();
-                if (globalSearchInput) {
-                    globalSearchInput.focus();
-                    globalSearchInput.select();
-                }
-            }
-        });
 
         // Clickable Dashboard KPI Cards Navigation
         document.querySelectorAll('.kpi-card[data-kpi-target]').forEach(card => {
@@ -405,6 +403,17 @@ class RHManagerApp {
                     btn.classList.remove('btn-primary', 'active');
                     btn.classList.add('btn-secondary');
                 }
+            }
+        });
+    }
+
+    filterEmployees(filter) {
+        this.renderEmployeesTable(filter);
+        // Update active state on filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-filter') === filter) {
+                btn.classList.add('active');
             }
         });
     }
