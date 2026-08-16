@@ -137,9 +137,40 @@ class RHManagerApp {
             });
         });
 
-        // Smart Global Search
-        document.getElementById('global-search').addEventListener('input', (e) => {
-            this.handleGlobalSearch(e.target.value.toLowerCase().trim());
+        // Smart Global Search & Ctrl+K Keyboard Shortcut
+        const globalSearchInput = document.getElementById('global-search');
+        if (globalSearchInput) {
+            globalSearchInput.addEventListener('input', (e) => {
+                this.handleGlobalSearch(e.target.value.toLowerCase().trim());
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                if (globalSearchInput) {
+                    globalSearchInput.focus();
+                    globalSearchInput.select();
+                }
+            }
+        });
+
+        // Clickable Dashboard KPI Cards Navigation
+        document.querySelectorAll('.kpi-card[data-kpi-target]').forEach(card => {
+            card.addEventListener('click', () => {
+                const target = card.getAttribute('data-kpi-target');
+                if (target === 'employees-all') {
+                    this.switchTab('employees');
+                    this.filterEmployees('all');
+                } else if (target === 'employees-actif') {
+                    this.switchTab('employees');
+                    this.filterEmployees('actif');
+                } else if (target === 'leaves') {
+                    this.switchTab('leaves');
+                } else if (target === 'finance') {
+                    this.switchTab('finance');
+                }
+            });
         });
 
         // Company Logo & Header Modal
@@ -184,9 +215,9 @@ class RHManagerApp {
         const zkImportBtn = document.getElementById('zk-import-file-btn');
         if (zkImportBtn) zkImportBtn.addEventListener('click', () => this.importZKTecoFile());
 
-        // Quick Add Employee buttons
-        document.getElementById('quick-add-emp-btn').addEventListener('click', () => this.openEmployeeModal());
-        document.getElementById('add-emp-btn').addEventListener('click', () => this.openEmployeeModal());
+        // Add Employee button (in Employees Tab)
+        const addEmpBtn = document.getElementById('add-emp-btn');
+        if (addEmpBtn) addEmpBtn.addEventListener('click', () => this.openEmployeeModal());
         
         // Modal cancel/close
         const empClose = document.getElementById('modal-emp-close');

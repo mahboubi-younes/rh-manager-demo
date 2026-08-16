@@ -119,15 +119,6 @@
                         <input type="text" id="global-search" placeholder="Recherche intelligente (Ctrl+K)...">
                         <kbd class="search-shortcut">Ctrl K</kbd>
                     </div>
-                    <button class="btn-secondary btn-sm" id="report-tab-btn" onclick="if(window.app) window.app.switchTab('about')" title="Lire le rapport d'audit et la présentation produit">
-                        <i class="fa-solid fa-award"></i> Rapport & Présentation
-                    </button>
-                    <button class="btn-secondary btn-sm" id="company-logo-btn" title="Personnaliser le logo entreprise sur les fiches et exports Excel">
-                        <i class="fa-solid fa-building"></i> Logo Entreprise
-                    </button>
-                    <button class="btn-primary" id="quick-add-emp-btn">
-                        <i class="fa-solid fa-user-plus"></i> Nouvel Employé
-                    </button>
                 </div>
             </header>
 
@@ -137,7 +128,7 @@
                 <section class="tab-panel active" id="tab-dashboard">
                     <!-- KPI Cards -->
                     <div class="kpi-grid">
-                        <div class="kpi-card blue">
+                        <div class="kpi-card blue" data-kpi-target="employees-all" title="Cliquer pour afficher tous les employés">
                             <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
                             <div class="kpi-content">
                                 <span class="kpi-label">Effectif Total</span>
@@ -146,7 +137,7 @@
                             </div>
                         </div>
 
-                        <div class="kpi-card green">
+                        <div class="kpi-card green" data-kpi-target="employees-actif" title="Cliquer pour voir les employés actifs">
                             <div class="kpi-icon"><i class="fa-solid fa-user-check"></i></div>
                             <div class="kpi-content">
                                 <span class="kpi-label">Employés Actifs</span>
@@ -155,7 +146,7 @@
                             </div>
                         </div>
 
-                        <div class="kpi-card orange">
+                        <div class="kpi-card orange" data-kpi-target="leaves" title="Cliquer pour accéder aux congés et absences">
                             <div class="kpi-icon"><i class="fa-solid fa-umbrella-beach"></i></div>
                             <div class="kpi-content">
                                 <span class="kpi-label">En Congé Actuel</span>
@@ -164,7 +155,7 @@
                             </div>
                         </div>
 
-                        <div class="kpi-card purple">
+                        <div class="kpi-card purple" data-kpi-target="finance" title="Cliquer pour accéder aux fiches de paye">
                             <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
                             <div class="kpi-content">
                                 <span class="kpi-label">Masse Salariale Est.</span>
