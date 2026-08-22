@@ -44,14 +44,40 @@ const DEFAULT_COMPANY = {
     logo: ''
 };
 
+const cloneData = (data) => JSON.parse(JSON.stringify(data));
+
+function readStoredArray(key, fallback) {
+    try {
+        const stored = localStorage.getItem(key);
+        if (!stored) return cloneData(fallback);
+        const value = JSON.parse(stored);
+        return Array.isArray(value) ? value : cloneData(fallback);
+    } catch (error) {
+        console.warn('Unable to read ' + key + ' from local storage.', error);
+        return cloneData(fallback);
+    }
+}
+
+function readStoredObject(key, fallback) {
+    try {
+        const stored = localStorage.getItem(key);
+        if (!stored) return cloneData(fallback);
+        const value = JSON.parse(stored);
+        return value && typeof value === 'object' && !Array.isArray(value) ? value : cloneData(fallback);
+    } catch (error) {
+        console.warn('Unable to read ' + key + ' from local storage.', error);
+        return cloneData(fallback);
+    }
+}
+
 // App State Management
 class RHManagerApp {
     constructor() {
-        this.employees = JSON.parse(localStorage.getItem('rh_employees')) || INITIAL_EMPLOYEES;
-        this.leaves = JSON.parse(localStorage.getItem('rh_leaves')) || INITIAL_LEAVES;
-        this.dailyLogs = JSON.parse(localStorage.getItem('rh_daily_logs')) || INITIAL_DAILY_LOGS;
-        this.zkLogs = JSON.parse(localStorage.getItem('rh_zk_logs')) || INITIAL_ZK_LOGS;
-        this.company = JSON.parse(localStorage.getItem('rh_company')) || DEFAULT_COMPANY;
+        this.employees = readStoredArray('rh_employees', INITIAL_EMPLOYEES);
+        this.leaves = readStoredArray('rh_leaves', INITIAL_LEAVES);
+        this.dailyLogs = readStoredArray('rh_daily_logs', INITIAL_DAILY_LOGS);
+        this.zkLogs = readStoredArray('rh_zk_logs', INITIAL_ZK_LOGS);
+        this.company = readStoredObject('rh_company', DEFAULT_COMPANY);
         this.charts = {};
         
         this.initDOM();
@@ -105,10 +131,14 @@ class RHManagerApp {
 
         // Keyboard Shortcut: Ctrl + K for Smart Search, Escape to close modals
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            const isSearchShortcut = (e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'k' || e.code === 'KeyK');
+            if (isSearchShortcut) {
                 e.preventDefault();
                 const searchInput = document.getElementById('global-search');
-                if (searchInput) searchInput.focus();
+                if (searchInput) {
+                    searchInput.focus({ preventScroll: true });
+                    searchInput.select();
+                }
             }
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.active').forEach(modal => this.closeModal(modal));
@@ -145,13 +175,18 @@ class RHManagerApp {
             });
         });
 
-        // Smart Global Search & Ctrl+K Keyboard Shortcut
+        // Smart Global Search
         const globalSearchInput = document.getElementById('global-search');
         if (globalSearchInput) {
             globalSearchInput.addEventListener('input', (e) => {
                 this.handleGlobalSearch(e.target.value.toLowerCase().trim());
             });
         }
+
+        // Report-language controls do not rely on a global variable.
+        document.querySelectorAll('[data-about-lang]').forEach(button => {
+            button.addEventListener('click', () => this.switchAboutLang(button.dataset.aboutLang));
+        });
 
         // Clickable Dashboard KPI Cards Navigation
         document.querySelectorAll('.kpi-card[data-kpi-target]').forEach(card => {
@@ -328,10 +363,13 @@ class RHManagerApp {
         // Reset Demo Data
         document.getElementById('reset-demo-btn').addEventListener('click', () => {
             if (confirm('Voulez-vous réinitialiser toutes les données de démonstration ?')) {
-                localStorage.clear();
-                this.employees = INITIAL_EMPLOYEES;
-                this.leaves = INITIAL_LEAVES;
-                this.dailyLogs = INITIAL_DAILY_LOGS;
+                ['rh_employees', 'rh_leaves', 'rh_daily_logs', 'rh_zk_logs', 'rh_company'].forEach(key => localStorage.removeItem(key));
+                this.employees = cloneData(INITIAL_EMPLOYEES);
+                this.leaves = cloneData(INITIAL_LEAVES);
+                this.dailyLogs = cloneData(INITIAL_DAILY_LOGS);
+                this.zkLogs = cloneData(INITIAL_ZK_LOGS);
+                this.company = cloneData(DEFAULT_COMPANY);
+                this.tempUploadedLogo = undefined;
                 this.saveState();
                 this.renderAll();
                 this.showToast('Données réinitialisées.', 'info');
@@ -697,7 +735,13 @@ class RHManagerApp {
 
     deleteEmployee(id) {
         if (confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) {
+            const employee = this.employees.find(e => e.id === id);
             this.employees = this.employees.filter(e => e.id !== id);
+            if (employee) {
+                this.leaves = this.leaves.filter(leave => leave.matricule !== employee.matricule);
+                this.dailyLogs = this.dailyLogs.filter(log => log.matricule !== employee.matricule);
+                this.zkLogs = this.zkLogs.filter(log => log.matricule !== employee.matricule);
+            }
             this.saveState();
             this.renderAll();
             this.showToast('Employé supprimé.', 'info');
@@ -708,7 +752,7 @@ class RHManagerApp {
         const startStr = document.getElementById('leave-start-date').value;
         const days = parseInt(document.getElementById('leave-days').value) || 1;
         if (startStr) {
-            const startDate = new Date(startStr);
+            const startDate = new Date(startStr + 'T00:00:00');
             startDate.setDate(startDate.getDate() + days - 1);
             document.getElementById('leave-end-date').value = startDate.toISOString().split('T')[0];
         }
@@ -762,7 +806,15 @@ class RHManagerApp {
 
     deleteLeave(id) {
         if (confirm('Voulez-vous annuler ce congé ?')) {
+            const leave = this.leaves.find(l => l.id === id);
             this.leaves = this.leaves.filter(l => l.id !== id);
+            if (leave) {
+                const employee = this.employees.find(e => e.matricule === leave.matricule);
+                if (employee) {
+                    const activeLeave = this.leaves.find(l => l.matricule === employee.matricule && l.status === 'Actif');
+                    employee.status = activeLeave ? (activeLeave.type === 'Maladie' ? 'maladie' : 'conge') : 'actif';
+                }
+            }
             this.saveState();
             this.renderAll();
             this.showToast('Congé retiré.', 'info');
@@ -1460,6 +1512,11 @@ class RHManagerApp {
 
     // Chart Renderings
     renderCharts() {
+        if (typeof Chart !== 'function') {
+            console.warn('Chart.js is unavailable; charts were skipped.');
+            return;
+        }
+
         // Recruitment chart
         const ctxRecruit = document.getElementById('chart-recruitment');
         if (ctxRecruit) {
@@ -1539,7 +1596,7 @@ class RHManagerApp {
 
         // Auto switch to employees tab if searching
         const activeTab = document.querySelector('.nav-link.active')?.getAttribute('data-tab');
-        if (activeTab !== 'employees' && activeTab !== 'zkteco' && activeTab !== 'leaves') {
+        if (activeTab !== 'employees') {
             this.switchTab('employees');
         }
 
@@ -1612,4 +1669,6 @@ class RHManagerApp {
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new RHManagerApp();
+    // Inline controls and generated table actions use this public application reference.
+    window.app = app;
 });
