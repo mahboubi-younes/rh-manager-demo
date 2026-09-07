@@ -7,7 +7,7 @@
 [![HTML5](https://img.shields.io/badge/HTML5-structure-e34f26?logo=html5&logoColor=white)](https://developer.mozilla.org/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS3-styles-1572b6?logo=css3&logoColor=white)](https://developer.mozilla.org/docs/Web/CSS)
 
-![RH Manager Pro dashboard preview](og-preview.png)
+![RH Manager Pro dashboard preview](docs/rh-manager-pro.png)
 
 ## The problem it solves
 
