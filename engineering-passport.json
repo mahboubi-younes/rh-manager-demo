@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T12:00:46.188Z",
+  "generatedAt": "2026-09-23T12:16:32.662Z",
   "repository": {
     "name": "mahboubi-younes/rh-manager-demo",
     "description": "Interactive HR workflow demo for Algerian teams: employees, leave, payroll estimates, and operational reporting."
@@ -22,16 +22,16 @@
       "detail": "Source files detected"
     },
     "BUILD": {
-      "status": "unknown",
-      "detail": "Not detected"
+      "status": "detected",
+      "detail": "Static browser project; no build script is required or declared"
     },
     "CI": {
       "status": "detected",
-      "detail": "Workflow run found; latest conclusion: in_progress"
+      "detail": "Workflow detected; latest non-Passport run: in_progress"
     },
     "TESTS": {
       "status": "unknown",
-      "detail": "Test files and configurations not detected"
+      "detail": "No test files or test configuration detected in the repository"
     },
     "DEPLOYMENT": {
       "status": "verified",
@@ -46,8 +46,8 @@
       "detail": "2 screenshot or asset file(s) detected"
     },
     "LIVE DEMO": {
-      "status": "detected",
-      "detail": "URL declared in README: https://img.shields.io/badge/Live%20demo-GitHub%20Pages-2ea44f?logo=github"
+      "status": "verified",
+      "detail": "Live demo reachable; HTTP 200"
     }
   },
   "github": {
@@ -64,13 +64,14 @@
     },
     "workflows": {
       "status": "detected",
-      "detail": "Workflow run found; latest conclusion: in_progress"
+      "detail": "Latest non-Passport workflow: in_progress"
     },
     "latestRun": {
       "name": "pages build and deployment",
       "status": "in_progress",
       "conclusion": null,
-      "updatedAt": "2026-09-23T12:00:42Z"
+      "updatedAt": "2026-09-23T12:16:27Z",
+      "url": "https://github.com/mahboubi-younes/rh-manager-demo/actions/runs/35859443587"
     }
   },
   "files": {
