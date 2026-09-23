@@ -1,21 +1,23 @@
 # Engineering Passport
 
+![Engineering Passport](./engineering-passport.svg)
+
 Repository: mahboubi-younes/rh-manager-demo
 
 Evidence-first report. This is not a quality score or ranking.
 
 ## Evidence
 
-- **README**"��y��y� DETECTED"��y��y� README.md detected
-- **LICENSE**"��y��y� DETECTED"��y��y� License file detected
-- **SOURCE**"��y��y� DETECTED"��y��y� Source files detected
-- **BUILD**"��y��y� UNKNOWN"��y��y� Not detected
-- **CI**"��y��y� DETECTED"��y��y� Workflow run found; latest conclusion: in_progress
-- **TESTS**"��y��y� UNKNOWN"��y��y� Test files and configurations not detected
-- **DEPLOYMENT**"��y��y� VERIFIED"��y��y� https://mahboubi-younes.github.io/rh-manager-demo/
-- **DOCUMENTATION**"��y��y� DETECTED"��y��y� Documentation sections or docs directory detected
-- **ASSETS**"��y��y� DETECTED"��y��y� 2 screenshot or asset file(s) detected
-- **LIVE DEMO**"��y��y� DETECTED"��y��y� URL declared in README: https://img.shields.io/badge/Live%20demo-GitHub%20Pages-2ea44f?logo=github
+- **README** | DETECTED | README.md detected
+- **LICENSE** | DETECTED | License file detected
+- **SOURCE** | DETECTED | Source files detected
+- **BUILD** | UNKNOWN | Not detected
+- **CI** | DETECTED | Workflow run found; latest conclusion: in_progress
+- **TESTS** | UNKNOWN | Test files and configurations not detected
+- **DEPLOYMENT** | VERIFIED | https://mahboubi-younes.github.io/rh-manager-demo/
+- **DOCUMENTATION** | DETECTED | Documentation sections or docs directory detected
+- **ASSETS** | DETECTED | 2 screenshot or asset file(s) detected
+- **LIVE DEMO** | DETECTED | URL declared in README: https://img.shields.io/badge/Live%20demo-GitHub%20Pages-2ea44f?logo=github
 
 ## Technologies
 
