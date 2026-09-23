@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-23T12:16:32.662Z",
+  "generatedAt": "2026-09-23T12:19:17.253Z",
   "repository": {
     "name": "mahboubi-younes/rh-manager-demo",
     "description": "Interactive HR workflow demo for Algerian teams: employees, leave, payroll estimates, and operational reporting."
@@ -26,8 +26,8 @@
       "detail": "Static browser project; no build script is required or declared"
     },
     "CI": {
-      "status": "detected",
-      "detail": "Workflow detected; latest non-Passport run: in_progress"
+      "status": "verified",
+      "detail": "Latest non-Passport workflow succeeded on 2026-09-23T12:17:53Z"
     },
     "TESTS": {
       "status": "unknown",
@@ -63,15 +63,15 @@
       "detail": "https://mahboubi-younes.github.io/rh-manager-demo/"
     },
     "workflows": {
-      "status": "detected",
-      "detail": "Latest non-Passport workflow: in_progress"
+      "status": "verified",
+      "detail": "Latest non-Passport workflow succeeded on 2026-09-23T12:17:53Z"
     },
     "latestRun": {
       "name": "pages build and deployment",
-      "status": "in_progress",
-      "conclusion": null,
-      "updatedAt": "2026-09-23T12:16:27Z",
-      "url": "https://github.com/mahboubi-younes/rh-manager-demo/actions/runs/35859443587"
+      "status": "completed",
+      "conclusion": "success",
+      "updatedAt": "2026-09-23T12:17:53Z",
+      "url": "https://github.com/mahboubi-younes/rh-manager-demo/actions/runs/35859464659"
     }
   },
   "files": {
